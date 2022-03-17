@@ -42,11 +42,9 @@ In the future, scripts should be able to import other scripts and make use of th
 
 As to how to declare functions, create objects, etc. please look at the [examples](/examples/)
 
----
 ## Benchmarks:
 Working on it..
 
----
 
 ## Motivation
 This is my first attempt at writing a full programming language, interpreter included.
@@ -82,7 +80,6 @@ But enough of that, lets end with the cools things I still want to experiment wi
 - [ ] Compiling to real machine code (RISC-V..)
 - [ ] Packaging
 
----
 ## Resources
 I followed the book over on [Crafting Interpreters](https://craftinginterpreters.com/) for some of the parsing process which taught me A LOT, and then diverged from there. I very much dislike reading technical stuff, and tbh I felt like my head was just about to fall of after the 4th chapter. Nevertheless, I recommend reading through all of it, if you can.
 
