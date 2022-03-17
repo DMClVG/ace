@@ -1,0 +1,14 @@
+{
+    cat = :{ # objects must start with a :{
+        happy: true,
+        unhappy: false,
+    }
+
+    print(cat["happy"]) # objects can be indexed with strings
+    print(cat.unhappy)
+    print(cat)
+
+    if cat == :{ happy: true, unhappy: false } {
+        print("yay happy 🥰")
+    }
+}

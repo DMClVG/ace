@@ -1,0 +1,17 @@
+{ # '0
+    x = 1
+
+    function = { # '1
+        print(x) # >>> 1
+        x = -1 # this does not affect the x of the outer scope
+        print(x) # >>> -1
+
+        fun {
+            print(x) # x will be captured from scope '1
+        }
+    }
+
+    print(x) >>> 1
+    function() >>> -1
+    print(x) >>> 1
+}

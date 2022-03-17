@@ -1,0 +1,33 @@
+{
+    say = print
+
+    shout = fun: x {
+        say(x + "!")
+    }
+
+    ask = fun: x, nQuestionMarks {
+        question_marks = if nQuestionMarks == nil {
+            "?"
+        } else {
+            res = ""
+            i = 0
+            while i <= nQuestionMarks {
+                res = res + "?"
+                i = i + 1
+            }
+            res
+        }
+        say(x + question_marks)
+    }
+
+    say_hi = fun {
+        say("hi")
+    }
+
+    ask("yo")
+
+    shout("heyy")
+
+    ask("you there", 2)
+}
+
