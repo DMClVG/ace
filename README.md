@@ -51,7 +51,7 @@ This is my first attempt at writing a full programming language, interpreter inc
 
 It's far from complete, and to be frank I don't think it's a language I would be thrilled to use (its got nil ew...), but you have to get your feet wet somehow.
 
-If there is any features I would still want to implement, it would many of those:
+If there is any features I would still want to implement, it would be many of those:
 
 - [ ] For loops
 - [ ] Destructuring: `` {a, b, c} = :{a: 5, b: 3, c:"yea"}``
