@@ -37,16 +37,17 @@ impl DerefMut for Scope {
     }
 }
 
-type FunDef = Box<dyn Fn(Value) -> Value>;
 
 pub fn new() -> Rc<RefCell<Scope>> {
-    let print: FunDef = Box::new(|args| {
-        println!("{}", args.index(Value::Number(0.0)));
-        Value::Nil
+    use Value::*;
+
+    let print: FunDef = Box::new(move |args: Value| {
+        println!("{}", args.index(Number(0.0)));
+        Nil
     });
 
     let clock: FunDef = Box::new(|_| {
-        Value::Number(
+        Number(
             SystemTime::now()
                 .duration_since(SystemTime::UNIX_EPOCH)
                 .unwrap()
@@ -54,47 +55,52 @@ pub fn new() -> Rc<RefCell<Scope>> {
         )
     });
 
-    let push: FunDef = Box::new(|args| {
-        if let Value::List(list) = args.index(Value::Number(0.0)) {
-            list.borrow_mut().push(args.index(Value::Number(1.0)));
+    let push: FunDef = Box::new(|args: Value| {
+        if let List(list) = args.index(Number(0.0)) {
+            list.borrow_mut().push(args.index(Number(1.0)));
         }
-        Value::Nil
+        Nil
     });
 
     let input: FunDef = Box::new(|_| {
-        let mut res = String::new();
+        let mut res = std::string::String::new();
         if let Ok(_) = std::io::stdin().read_line(&mut res) {
-            Value::String(Rc::new(res.trim_end().to_string()))
+            res.trim_end().into()
         } else {
-            Value::Nil
+            Nil
         }
     });
 
-    let parse: FunDef = Box::new(|args| {
-        if let Value::String(s) = args.index(Value::Number(0.0)) {
+    let parse: FunDef = Box::new(|args: Value| {
+        if let String(s) = args.index(Number(0.0)) {
             if let Ok(num) = s.parse::<f64>() {
-                Value::Number(num)
+                Number(num)
             } else {
-                Value::Nil
+                Nil
             }
         } else {
-            Value::Nil
+            Nil
         }
     });
 
     let random: FunDef = Box::new(|_| {
-        Value::Number(rand::random())
+        Number(rand::random())
     });
 
     let mut global = Scope::default();
 
-    global.set("print".into(), Value::Fun(Rc::new(Fun(print))));
-    global.set("clock".into(), Value::Fun(Rc::new(Fun(clock))));
-    global.set("push".into(), Value::Fun(Rc::new(Fun(push))));
-    global.set("input".into(), Value::Fun(Rc::new(Fun(input))));
-    global.set("parse".into(), Value::Fun(Rc::new(Fun(parse))));
-    global.set("cat".into(), Value::new_object());
-    global.set("random".into(), Value::Fun(Rc::new(Fun(random))));
+    global.set("print".into(), print.into());
+    global.set("clock".into(), clock.into());
+    global.set("push".into(), push.into());
+    global.set("input".into(), input.into());
+    global.set("parse".into(), parse.into());
+    global.set("random".into(), random.into());
+
+    global.set("cat".into(), obj! {
+        hey: 12.0,
+        yo: "baby",
+        house: list![0.0, "cat", obj! { lol: "bob" }],
+    });
 
     Rc::new(RefCell::new(global))
 }

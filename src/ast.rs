@@ -27,7 +27,10 @@ pub enum UnaryOperator {
     Inverse,
 }
 
-pub struct Fun(pub Box<dyn Fn(Value) -> Value>);
+pub type FunDef = Box<dyn Fn(Value) -> Value>;
+
+pub struct Fun(pub FunDef);
+
 
 impl std::fmt::Debug for Fun {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -68,15 +71,31 @@ pub enum Value {
     Nil,
 }
 
+impl From<&str> for Value {
+    fn from(x: &str) -> Self {
+        Value::String(Rc::new(x.to_owned()))
+    }
+} 
+
+impl From<f64> for Value {
+    fn from(x: f64) -> Self {
+        Value::Number(x)
+    }
+}
+
+impl From<bool> for Value {
+    fn from(x: bool) -> Self {
+        Value::Bool(x)
+    }
+}
+
+impl From<FunDef> for Value {
+    fn from(x: Box<dyn Fn(Value) -> Value>) -> Self {
+        Value::Fun(Rc::new(Fun(x)))
+    }
+}
+
 impl Value {
-    pub fn new_list() -> Value {
-        Value::List(Rc::new(RefCell::new(vec![])))
-    }
-
-    pub fn new_object() -> Value {
-        Value::Object(Rc::new(RefCell::new(Object::default())))
-    }
-
     pub fn is_nil(&self) -> bool {
         if let Self::Nil = self {
             true
@@ -85,6 +104,7 @@ impl Value {
         }
     }
 }
+
 
 impl Display for Value {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -142,3 +162,35 @@ pub enum Statement {
     While(Box<Statement>, Box<Statement>),
     Expr(Expression),
 }
+
+
+macro_rules! obj {
+    {$($a:ident: $b:expr),* $(,)?} => {
+        {
+            let mut object = self::Object::default();
+
+            $(
+                object.set(stringify!($a).to_owned(), ($b).into());
+            )*
+
+            Value::Object(Rc::new(RefCell::new(object)))
+        }
+    };
+}
+
+macro_rules! list {
+    [$($b:expr),* $(,)?] => {
+        {
+            let mut list = Vec::<Value>::default();
+
+            $(
+                list.push(($b).into());
+            )*
+
+            Value::List(Rc::new(RefCell::new(list)))
+        }
+    };
+}
+
+pub(crate) use obj;
+pub(crate) use list;
