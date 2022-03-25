@@ -32,7 +32,6 @@ fn main() {
             println!();
         }
     } else if let Ok(code) = result {
-        dbg!(&code);
         let root = interpreter::new();
         code.execute(root);
     }

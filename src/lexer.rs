@@ -65,7 +65,7 @@ struct SplitWord<'a> {
     input: &'a str,
     pos: usize,
     line: usize,
-    line_pos: usize,
+    line_col: usize,
 }
 
 impl<'a> SplitWord<'a> {
@@ -74,7 +74,7 @@ impl<'a> SplitWord<'a> {
             input,
             pos: 0,
             line: 0,
-            line_pos: 0,
+            line_col: 0,
         }
     }
 }
@@ -102,51 +102,58 @@ impl<'a> Iterator for SplitWord<'a> {
         if self.pos >= self.input.len() {
             return None;
         }
-        let mut range = None;
+        let mut word = None;
         let mut is_num = false;
-        for (idx, c) in self.input[self.pos..].char_indices() {
+
+        for (_, c) in self.input[self.pos..].char_indices() {
+            let c_len = c.len_utf8();
+            self.pos += c_len;
+            self.line_col += 1;
             match c {
                 _ if c.is_ascii_punctuation() && c != '_' => {
-                    if range.is_none() {
-                        range = Some(idx..idx + 1);
+                    if word.is_none() {
+                        word = Some((self.line_col, self.pos-c_len..self.pos));
+                        break;
                     } else if is_num && c == '.' {
-                        range.as_mut().unwrap().end += 1;
+                        word.as_mut().unwrap().1.end += c_len;
                         continue;
+                    } else {
+                        self.line_col -= 1;
+                        self.pos -= c_len;
+                        break;
                     }
-                    break;
                 }
                 _ if c.is_whitespace() => {
-                    if range.is_none() { // ignore
-                        if c == '\n' {
-                            self.line += 1;
-                            self.line_pos = self.pos + idx + 1; // + 1 cuz idk it fix B)
-                        }
+                    if c == '\n' {
+                        self.line += 1;
+                        self.line_col = 0;
+                    }
+                    if word.is_none() { // ignore
                         continue; 
                     } else {
                         break; // end word if it hit a whitespace character
                     }
                 }
                 _ => {
-                    if let Some(ref mut range) = range {
-                        range.end += 1;
+                    if let Some(ref mut range) = word {
+                        range.1.end += c_len;
                     } else {
                         if c.is_ascii_digit() {
                             is_num = true;
                         }
-                        range = Some(idx..idx + 1);
+                        word = Some((self.line_col, self.pos-c_len..self.pos));
                     }
                 }
             }
         }
-        if let Some(range) = range {
+        if let Some((col, span)) = word {
             let res = Word {
-                body: &self.input[self.pos..][range.clone()],
+                body: &self.input[span.clone()],
                 line: self.line,
-                col: (self.pos + range.start) - self.line_pos,
-                span: self.pos + range.start..self.pos + range.end,
+                col: col - 1,
+                span,
             };
 
-            self.pos += range.end;
             Some(res)
         } else {
             None
@@ -243,11 +250,7 @@ impl<'a> Lexer<'a> {
                             break;
                         }
                     }
-                    if let Some(s) = s {
-                        TokenKind::String(&self.input[s])
-                    } else {
-                        panic!("String never terminated!");
-                    }
+                    TokenKind::String(&self.input[s.expect("String never terminated!")])
                 },
                 _ => {
                     if let Ok(num) = word.parse::<f64>() {
