@@ -40,8 +40,8 @@ impl DerefMut for Scope {
 type FunDef = Box<dyn Fn(Value) -> Value>;
 
 pub fn new() -> Rc<RefCell<Scope>> {
-    let print: FunDef = Box::new(|arg| {
-        println!("{}", arg.index(Value::Number(0.0)));
+    let print: FunDef = Box::new(|args| {
+        println!("{}", args.index(Value::Number(0.0)));
         Value::Nil
     });
 
@@ -70,8 +70,8 @@ pub fn new() -> Rc<RefCell<Scope>> {
         }
     });
 
-    let parse: FunDef = Box::new(|arg| {
-        if let Value::String(s) = arg.index(Value::Number(0.0)) {
+    let parse: FunDef = Box::new(|args| {
+        if let Value::String(s) = args.index(Value::Number(0.0)) {
             if let Ok(num) = s.parse::<f64>() {
                 Value::Number(num)
             } else {
@@ -82,6 +82,10 @@ pub fn new() -> Rc<RefCell<Scope>> {
         }
     });
 
+    let random: FunDef = Box::new(|_| {
+        Value::Number(rand::random())
+    });
+
     let mut global = Scope::default();
 
     global.set("print".into(), Value::Fun(Rc::new(Fun(print))));
@@ -90,6 +94,7 @@ pub fn new() -> Rc<RefCell<Scope>> {
     global.set("input".into(), Value::Fun(Rc::new(Fun(input))));
     global.set("parse".into(), Value::Fun(Rc::new(Fun(parse))));
     global.set("cat".into(), Value::new_object());
+    global.set("random".into(), Value::Fun(Rc::new(Fun(random))));
 
     Rc::new(RefCell::new(global))
 }
