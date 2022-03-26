@@ -32,7 +32,8 @@ fn main() {
             println!();
         }
     } else if let Ok(code) = result {
-        let root = interpreter::new();
-        code.execute(root);
+        // dbg!(&code);
+        let global = interpreter::new();
+        code.execute(global);
     }
 }

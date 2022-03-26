@@ -175,6 +175,7 @@ impl Statement {
 
                 return Value::Fun(Rc::new(fun));
             }
+            _ => { todo!() }
         }
         return Value::Nil;
     }
@@ -183,10 +184,8 @@ impl Statement {
 impl Expression {
     pub fn evaluate(&self, s: &Scope) -> Value {
         match self {
-            Self::Primary(leaf) => match leaf {
-                Leaf::Literal(val) => val.clone(),
-                Leaf::Var(var) => Scope::get(s, var),
-            },
+            Self::Literal(val) => val.clone(),
+            Self::Var(var) => Scope::get(s, var),
             Self::Unary(op, expr) => match op {
                 UnaryOperator::Inverse => expr.evaluate(s).opposite(),
                 UnaryOperator::Negate => expr.evaluate(s).negate(),
@@ -207,8 +206,8 @@ impl Expression {
                     Multiply => a.mult(b),
                     Divide => a.div(b),
                     Modulo => a.rem(b),
-                    And => Value::Bool(a.is_true() && b.is_true()),
-                    Or => Value::Bool(a.is_true() || b.is_true()),
+                    DoAnd => Value::Bool(a.is_true() && b.is_true()),
+                    DoOr => Value::Bool(a.is_true() || b.is_true()),
                     Index => a.index(b),
                     Call => a.call(b),
                 }
@@ -232,12 +231,9 @@ impl Expression {
 
     pub fn evaluate_deref_assign(&self, s: &mut Scope, n: Value) {
         match self {
-            Self::Primary(leaf) => match leaf {
-                Leaf::Var(var) => {
-                    s.set(var.to_owned(), n);
-                    return;
-                }
-                _ => {}
+            Self::Var(var) => {
+                s.set(var.to_owned(), n);
+                return;
             },
             Self::Binary(op, left, right) => {
                 use BinaryOperator::*;

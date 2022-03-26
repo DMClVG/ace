@@ -32,6 +32,8 @@ pub enum TokenKind<'a> {
     While,
     For,
     Loop,
+    Break,
+    Continue,
 
     Plus,
     Minus,
@@ -48,6 +50,7 @@ pub enum TokenKind<'a> {
     Nil,
 
     Fun,
+    Return,
 
     Invalid,
     EOF,
@@ -241,6 +244,9 @@ impl<'a> Lexer<'a> {
                 "false" => TokenKind::False,
                 "fun" => TokenKind::Fun,
                 "nil" => TokenKind::Nil,
+                "continue" => TokenKind::Continue,
+                "break" => TokenKind::Break,
+                "return" => TokenKind::Return, 
                 "\"" => {
                     let mut s: Option<Range<usize>> = None;
                     while let Some(t) = iter.next() {

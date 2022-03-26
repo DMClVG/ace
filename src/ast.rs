@@ -14,8 +14,8 @@ pub enum BinaryOperator {
     IsLesserOrEqual,
     IsGreaterOrEqual,
 
-    And,
-    Or,
+    DoAnd,
+    DoOr,
 
     Index,
     Call,
@@ -163,19 +163,14 @@ pub type VarName = String;
 pub type Block = Vec<Statement>;
 
 #[derive(Debug, Clone)]
-pub enum Leaf {
-    Literal(Value),
-    Var(VarName),
-}
-
-#[derive(Debug, Clone)]
 pub enum Expression {
     Grouping(Box<Expression>),
     Binary(BinaryOperator, Box<Expression>, Box<Expression>),
     Unary(UnaryOperator, Box<Expression>),
     List(Vec<Expression>),
     Pairs(Vec<(String, Expression)>),
-    Primary(Leaf),
+    Literal(Value),
+    Var(VarName),
 }
 
 #[derive(Debug, Clone)]
@@ -186,6 +181,9 @@ pub enum Statement {
     If(Box<Statement>, Box<Statement>, Option<Box<Statement>>),
     While(Box<Statement>, Box<Statement>),
     Expr(Expression),
+    Return(Box<Statement>),
+    Break,
+    Continue
 }
 
 
