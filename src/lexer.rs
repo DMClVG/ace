@@ -112,10 +112,10 @@ impl<'a> Iterator for SplitWord<'a> {
             match c {
                 _ if c.is_ascii_punctuation() && c != '_' => {
                     if word.is_none() {
-                        word = Some((self.line_col, self.pos-c_len..self.pos));
+                        word = Some((self.line, self.line_col, self.pos-c_len..self.pos));
                         break;
                     } else if is_num && c == '.' {
-                        word.as_mut().unwrap().1.end += c_len;
+                        word.as_mut().unwrap().2.end += c_len;
                         continue;
                     } else {
                         self.line_col -= 1;
@@ -136,20 +136,20 @@ impl<'a> Iterator for SplitWord<'a> {
                 }
                 _ => {
                     if let Some(ref mut range) = word {
-                        range.1.end += c_len;
+                        range.2.end += c_len;
                     } else {
                         if c.is_ascii_digit() {
                             is_num = true;
                         }
-                        word = Some((self.line_col, self.pos-c_len..self.pos));
+                        word = Some((self.line, self.line_col, self.pos-c_len..self.pos));
                     }
                 }
             }
         }
-        if let Some((col, span)) = word {
+        if let Some((line, col, span)) = word {
             let res = Word {
                 body: &self.input[span.clone()],
-                line: self.line,
+                line,
                 col: col - 1,
                 span,
             };
