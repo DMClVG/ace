@@ -103,6 +103,19 @@ impl Value {
             false
         }
     }
+
+    pub fn is_true(&self) -> bool {
+        use Value::*;
+        match self {
+            Bool(false) => false,
+            Number(a) if *a <= f64::EPSILON && *a >= -f64::EPSILON => false,
+            String(a) if a.len() == 0 => false,
+            List(a) if a.borrow().len() == 0 => false,
+            Object(a) if a.borrow().fields.len() == 0 => false,
+            Nil => false,
+            _ => true,
+        }
+    }
 }
 
 

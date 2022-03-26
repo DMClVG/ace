@@ -117,14 +117,14 @@ impl Statement {
             }
             Statement::If(condition, block, else_block) => {
                 let condition = condition.execute(s.clone());
-                if let Value::Bool(true) = condition {
+                if condition.is_true() {
                     return block.execute(s);
                 } else if let Some(e) = else_block {
                     return e.execute(s);
                 }
             }
             Statement::While(condition, block) => {
-                while let Value::Bool(true) = condition.execute(s.clone()) {
+                while condition.execute(s.clone()).is_true() {
                     // collect in a list??
                     block.execute(s.clone());
                 }
@@ -191,8 +191,8 @@ impl Expression {
                     Multiply => a.mult(b),
                     Divide => a.div(b),
                     Modulo => a.rem(b),
-                    And => a.and(b),
-                    Or => a.or(b),
+                    And => Value::Bool(a.is_true() && b.is_true()),
+                    Or => Value::Bool(a.is_true() || b.is_true()),
                     Index => a.index(b),
                     Call => a.call(b),
                 }
@@ -286,10 +286,7 @@ impl Value {
     }
 
     pub fn opposite(self) -> Value {
-        match self {
-            Value::Bool(val) => Value::Bool(!val),
-            _ => Value::Nil,
-        }
+        Value::Bool(!self.is_true())
     }
 
     pub fn negate(self) -> Value {
@@ -346,22 +343,6 @@ impl Value {
         match (self, r) {
             (Number(a), Number(b)) => Number(a.rem_euclid(b)),
             (_, _) => Nil,
-        }
-    }
-
-    pub fn or(self, r: Value) -> Value {
-        use Value::*;
-        match (self, r) {
-            (Bool(a), Bool(b)) => Bool(a || b),
-            _ => Nil,
-        }
-    }
-
-    pub fn and(self, r: Value) -> Value {
-        use Value::*;
-        match (self, r) {
-            (Bool(a), Bool(b)) => Bool(a && b),
-            _ => Nil,
         }
     }
 
