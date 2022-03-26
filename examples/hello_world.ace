@@ -1,11 +1,11 @@
 {
     message = "hello" + " " + "world" + "!!"
     
-    print(message)
+    io.print(message)
 
     i = 1
     while i < 5 { # print out every character individually
-        print(message[i])
+        io.print(message[i])
         i = i + 1 
     } 
 }

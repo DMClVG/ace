@@ -4,11 +4,11 @@
         unhappy: false,
     }
 
-    print(cat["happy"]) # objects can be indexed with strings
-    print(cat.unhappy)
-    print(cat)
+    io.print(cat["happy"]) # objects can be indexed with strings
+    io.print(cat.unhappy) # or with a field name
+    io.print(cat)
 
     if cat == :{ happy: true, unhappy: false } {
-        print("yay happy 🥰")
+        io.print("yay happy 🥰")
     }
 }

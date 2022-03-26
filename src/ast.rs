@@ -89,6 +89,18 @@ impl From<bool> for Value {
     }
 }
 
+impl From<Object> for Value {
+    fn from(o: Object) -> Self {
+        Value::Object(Rc::new(RefCell::new(o)))
+    }
+}
+
+impl From<Vec<Value>> for Value {
+    fn from(l: Vec<Value>) -> Self {
+        Value::List(Rc::new(RefCell::new(l)))
+    }
+}
+
 impl From<FunDef> for Value {
     fn from(x: Box<dyn Fn(Value) -> Value>) -> Self {
         Value::Fun(Rc::new(Fun(x)))
@@ -186,7 +198,7 @@ macro_rules! obj {
                 object.set(stringify!($a).to_owned(), ($b).into());
             )*
 
-            Value::Object(Rc::new(RefCell::new(object)))
+            object
         }
     };
 }
@@ -200,7 +212,7 @@ macro_rules! list {
                 list.push(($b).into());
             )*
 
-            Value::List(Rc::new(RefCell::new(list)))
+            list
         }
     };
 }

@@ -8,6 +8,15 @@ pub struct Scope {
     inner: Object,
 }
 
+impl From<Object> for Scope {
+    fn from(o: Object) -> Self {
+        Self {
+            enclosing: None,
+            inner: o,
+        }
+    }
+}
+
 impl Scope {
     pub fn get(&self, name: &str) -> Value {
         match Object::get(self, name) {
@@ -87,20 +96,27 @@ pub fn new() -> Rc<RefCell<Scope>> {
         Number(rand::random())
     });
 
-    let mut global = Scope::default();
-
-    global.set("print".into(), print.into());
-    global.set("clock".into(), clock.into());
-    global.set("push".into(), push.into());
-    global.set("input".into(), input.into());
-    global.set("parse".into(), parse.into());
-    global.set("random".into(), random.into());
-
-    global.set("cat".into(), obj! {
-        hey: 12.0,
-        yo: "baby",
-        house: list![0.0, "cat", obj! { lol: "bob" }],
-    });
+    let global: Scope = obj! {
+        io: obj! {
+            print: print,
+            input: input,
+        },
+        std: obj! {
+            parse: parse,
+            random: random,
+        },
+        os: obj! {
+            clock: clock,
+        },
+        table: obj! {
+            push: push,
+        },
+        cat: obj! {
+            hey: 12.0,
+            yo: "baby",
+            house: list![0.0, "cat", obj! { lol: "bob" }],
+        },
+    }.into();
 
     Rc::new(RefCell::new(global))
 }

@@ -1,22 +1,22 @@
 {
-    start = clock() # clock returns current UNIX time in seconds
+    start = os.clock() # clock returns current UNIX time in seconds
 
     res = []
 
     x = 0
     while x <= 100 {
         if x % 3 == 0 and x % 5 == 0 {
-            push(res, "fizzbuzz") # push is a builtin function
+            table.push(res, "fizzbuzz") # push is a builtin function
         } else if x % 3 == 0 {
-            push(res, "fizz")
+            table.push(res, "fizz")
         } else if x % 5 == 0 {
-            push(res, "buzz")
+            table.push(res, "buzz")
         } else {
-            push(res, x) # this is the same as doing res = res + [x]
+            table.push(res, x) # this is the same as doing res = res + [x]
         }
         x = x + 1
     }
 
-    print("time: " + (clock() - start)) # benchmark time
-    print(res) # print result
+    io.print("time: " + (clock() - start)) # benchmark time
+    io.print(res) # print result
 }

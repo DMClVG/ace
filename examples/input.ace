@@ -1,19 +1,19 @@
 {
-    print("What is A?")
-    a = input()
-    parsedA = parse(a) # parse a
-
+    io.print("What is A?")
+    a = io.input()
+    parsedA = std.parse(a) # parse a
+    
     a = if parsedA != nil {
         parsedA
     } else { a }
 
-    print("What is B?")
+    io.print("What is B?")
 
-    b = input()
-    parsedB = parse(b)
+    b = io.input()
+    parsedB = std.parse(b)
     b = if parsedB != nil {
         parsedB
     } else { b }
 
-    print("A + B is " + (a + b))
+    io.print("A + B is " + (a + b))
 }

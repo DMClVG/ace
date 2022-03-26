@@ -1,5 +1,5 @@
 {
-    say = print
+    say = io.print
 
     shout = fun: x {
         say(x + "!")
