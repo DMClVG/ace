@@ -26,9 +26,9 @@ fn main() {
     if let Err(errs) = result {
         for err in errs {
             let prefix = format!("{}: on line {}: ", "ERROR", err.responsible.line + 1);
-
-            println!("{}{}", prefix.red().bold(), input.lines().nth(err.responsible.line).unwrap());
-            println!("{}{} {}", " ".repeat(prefix.len() + err.responsible.col), "^".repeat(err.responsible.span.len()).red().bold(), err.cause.red().bold());
+            
+            eprintln!("{}{}", prefix.red().bold(), input.lines().nth(err.responsible.line).unwrap());
+            eprintln!("{}{} {}", " ".repeat(prefix.len() + err.responsible.col), "^".repeat(err.responsible.span.len()).red().bold(), err.cause.red().bold());
             println!();
         }
     } else if let Ok(code) = result {
