@@ -74,7 +74,7 @@ impl TokenKind<'_> {
         let res = s
             .chars()
             .zip(
-                s[s.chars().nth(0).unwrap().len_utf8()..]
+                s[s.chars().nth(0).map_or(0, |c| c.len_utf8())..]
                     .chars()
                     .chain("\0".chars()),
             )
