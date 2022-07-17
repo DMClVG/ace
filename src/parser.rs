@@ -107,7 +107,7 @@ impl<'a: 'b, 'b> Parser<'a, 'b> {
                 if self.match_adv(&Colon) {
                     Ok(Statement::FunDecl(self.params().map_err(|e| vec![e])?, Box::new(self.block(true)?)))
                 } else {
-                    Ok(Statement::FunDecl(vec![], Box::new(self.block(true)?)))
+                    Ok(Statement::FunDecl(vec![], Box::new(self.block(false)?)))
                 }
             },
         })
