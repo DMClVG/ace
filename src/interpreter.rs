@@ -1,6 +1,6 @@
 use std::{cell::RefCell, rc::Rc, time::SystemTime, ops::{Deref, DerefMut}};
 
-use crate::ast::*;
+use crate::{ast::*, obj, list};
 
 #[derive(Default)]
 pub struct Scope {

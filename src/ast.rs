@@ -197,7 +197,7 @@ pub enum Statement {
     Continue
 }
 
-
+#[macro_export]
 macro_rules! obj {
     {$($a:ident: $b:expr),* $(,)?} => {
         {
@@ -212,6 +212,7 @@ macro_rules! obj {
     };
 }
 
+#[macro_export]
 macro_rules! list {
     [$($b:expr),* $(,)?] => {
         {
@@ -225,6 +226,3 @@ macro_rules! list {
         }
     };
 }
-
-pub(crate) use obj;
-pub(crate) use list;
