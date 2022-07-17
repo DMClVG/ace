@@ -17,7 +17,7 @@ fn main() {
     let args = Args::from_args();
     let input = std::fs::read_to_string(args.input).expect("Unable to read input file");
 
-    let mut lexer = lexer::Lexer::new(input.as_str());
+    let mut lexer = lexer::Lexer::from_str(input.as_str());
     let tokens = lexer.lex();
 
     let parser = parser::Parser::new(&tokens);

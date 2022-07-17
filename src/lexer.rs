@@ -1,14 +1,13 @@
-use std::ops::{Range, Deref};
+use std::ops::{Deref, Range};
 
 #[derive(PartialEq, Debug, Clone)]
 pub enum TokenKind<'a> {
     Number(f64),
-    String(&'a str),
+    String(String),
     Identifier(&'a str),
     // Coefficient(f64, &'a str),
-
     Assign,
-    
+
     Lesser,
     Greater,
     Equal,
@@ -54,6 +53,53 @@ pub enum TokenKind<'a> {
 
     Invalid,
     EOF,
+}
+
+impl TokenKind<'_> {
+    const ESCAPE_CHARS: [(char, char); 10] = [
+        ('\\', '\\'),
+        ('n', '\n'),
+        ('r', '\r'),
+        ('\n', '\0'), // \ followed by a new line => ignores new line in strings
+        ('a', '\x07'),
+        ('b', '\x08'),
+        ('t', '\t'),
+        ('v', '\x0B'),
+        ('\'', '\''),
+        ('\"', '\"'),
+    ];
+
+    fn try_from_escaped_string(s: &str) -> Result<TokenKind, String> {
+        let mut was_escaped = false;
+        let res = s
+            .chars()
+            .zip(
+                s[s.chars().nth(0).unwrap().len_utf8()..]
+                    .chars()
+                    .chain("\0".chars()),
+            )
+            .map(|(c, f)| {
+                if was_escaped {
+                    was_escaped = false;
+                    return None;
+                }
+                if c == '\\' {
+                    for (escape_char, translated) in Self::ESCAPE_CHARS {
+                        if f == escape_char {
+                            was_escaped = true;
+                            return Some(Ok(translated));
+                        }
+                    }
+                    Some(Err(format!("Invalid escape code \\{}", f)))
+                } else {
+                    Some(Ok(c))
+                }
+            })
+            .flatten() // filter out nones
+            .collect::<Result<String, String>>()?;
+
+        Ok(TokenKind::String(res))
+    }
 }
 
 #[derive(PartialEq, Debug, Clone)]
@@ -115,7 +161,7 @@ impl<'a> Iterator for SplitWord<'a> {
             match c {
                 _ if c.is_ascii_punctuation() && c != '_' => {
                     if word.is_none() {
-                        word = Some((self.line, self.line_col, self.pos-c_len..self.pos));
+                        word = Some((self.line, self.line_col, self.pos - c_len..self.pos));
                         break;
                     } else if is_num && c == '.' {
                         word.as_mut().unwrap().2.end += c_len;
@@ -131,8 +177,9 @@ impl<'a> Iterator for SplitWord<'a> {
                         self.line += 1;
                         self.line_col = 0;
                     }
-                    if word.is_none() { // ignore
-                        continue; 
+                    if word.is_none() {
+                        // ignore
+                        continue;
                     } else {
                         break; // end word if it hit a whitespace character
                     }
@@ -144,7 +191,7 @@ impl<'a> Iterator for SplitWord<'a> {
                         if c.is_ascii_digit() {
                             is_num = true;
                         }
-                        word = Some((self.line, self.line_col, self.pos-c_len..self.pos));
+                        word = Some((self.line, self.line_col, self.pos - c_len..self.pos));
                     }
                 }
             }
@@ -169,17 +216,15 @@ pub struct Lexer<'a> {
 }
 
 impl<'a> Lexer<'a> {
-    pub fn new(input: &'a str) -> Self {
-        Self {
-            input,
-        }
+    pub fn from_str(input: &'a str) -> Self {
+        Self { input }
     }
 
     pub fn lex(&mut self) -> Vec<Token> {
         let mut tokens = Vec::new();
 
         let words = SplitWord::new(self.input).collect::<Vec<Word>>();
-        let mut iter =  words.iter().peekable();
+        let mut iter = words.iter().peekable();
 
         let mut commented = None;
         while let Some(word) = iter.next() {
@@ -194,25 +239,23 @@ impl<'a> Lexer<'a> {
             let kind = match word.body {
                 op @ ("<" | ">" | "=" | "!") => {
                     match iter.peek() {
-                        Some(&Word { body: "=", ..}) => {
+                        Some(&Word { body: "=", .. }) => {
                             iter.next(); // Skip element
                             match op {
                                 "<" => TokenKind::LesserOrEq,
                                 ">" => TokenKind::GreaterOrEq,
                                 "=" => TokenKind::Equal,
                                 "!" => TokenKind::Unequal,
-                                _ => unreachable!()
-                            }
-                        },
-                        _ => {
-                            match op {
-                                "<" => TokenKind::Lesser,
-                                ">" => TokenKind::Greater,
-                                "=" => TokenKind::Assign,
-                                "!" => TokenKind::Exclamation,
-                                _ => unreachable!()
+                                _ => unreachable!(),
                             }
                         }
+                        _ => match op {
+                            "<" => TokenKind::Lesser,
+                            ">" => TokenKind::Greater,
+                            "=" => TokenKind::Assign,
+                            "!" => TokenKind::Exclamation,
+                            _ => unreachable!(),
+                        },
                     }
                 }
                 "#" => {
@@ -246,22 +289,30 @@ impl<'a> Lexer<'a> {
                 "nil" => TokenKind::Nil,
                 "continue" => TokenKind::Continue,
                 "break" => TokenKind::Break,
-                "return" => TokenKind::Return, 
+                "return" => TokenKind::Return,
                 "\"" => {
                     let mut s: Option<Range<usize>> = None;
-                    while let Some(t) = iter.next() {
+                    let mut escaped = false;
+                    while let Some(t) = iter.next() { // search for unescaped double quote
                         let end = t.span.start;
-                        if t.body == "\"" {
+                        if !escaped && t.body == "\"" {
                             s = Some(span.end..end);
                             break;
+                        } else if !escaped && t.body == "\\" {
+                            escaped = true;
+                        } else {
+                            escaped = false;
                         }
                     }
-                    TokenKind::String(&self.input[s.expect("String never terminated!")])
-                },
+                    TokenKind::try_from_escaped_string(
+                        &self.input[s.expect("String never terminated!")],
+                    )
+                    .unwrap()
+                }
                 _ => {
                     if let Ok(num) = word.parse::<f64>() {
                         TokenKind::Number(num)
-                    } else if word.starts_with(char::is_alphabetic){
+                    } else if word.starts_with(char::is_alphabetic) {
                         // if word.starts_with(char::is_numeric) {
                         //     let num = word.split_at(word.find(|c: char| { c.is_numeric() || c == '.'}).unwrap() + 1);
                         //     TokenKind::Coefficient(num.0.parse().unwrap(), num.1)
@@ -273,9 +324,19 @@ impl<'a> Lexer<'a> {
                     }
                 }
             };
-            tokens.push(Token { kind, line, col, span });
+            tokens.push(Token {
+                kind,
+                line,
+                col,
+                span,
+            });
         }
-        tokens.push(Token { kind: TokenKind::EOF, line: 0, col: 0, span: Default::default() });
+        tokens.push(Token {
+            kind: TokenKind::EOF,
+            line: 0,
+            col: 0,
+            span: Default::default(),
+        });
         tokens
     }
 }
@@ -286,7 +347,8 @@ mod test {
 
     #[test]
     fn test_lexer() {
-        let mut lexer = Lexer::new("while x != 18.32 and _size() < (5+1) { wait(\"for eve\n\nr\") }");
+        let mut lexer =
+            Lexer::from_str("while x != 18.32 and size() < (5+1) { wait(\"for eve\n\n\\\"r\") }");
 
         use TokenKind::*;
         assert_eq!(
@@ -301,7 +363,7 @@ mod test {
                 Unequal,
                 Number(18.32),
                 And,
-                Identifier("_size"),
+                Identifier("size"),
                 LParenthese,
                 RParenthese,
                 Lesser,
@@ -313,7 +375,7 @@ mod test {
                 LBraces,
                 Identifier("wait"),
                 LParenthese,
-                String("for eve\n\nr"),
+                String("for eve\n\n\"r".to_string()),
                 RParenthese,
                 RBraces,
                 EOF,

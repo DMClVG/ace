@@ -18,7 +18,7 @@ type Stmt<'b> = Result<Statement, Vec<ParserError<'b>>>;
 
 macro_rules! match_next {
     ($obj:expr, {$($matcher:pat $(if $pred:expr)? => $result:expr),* $(,)?})  => {
-        match $obj.peek().kind {
+        match &$obj.peek().kind {
             $($matcher $(if $pred)? => {
                 $obj.next();
                 Some($result)
@@ -195,7 +195,7 @@ impl<'a: 'b, 'b> Parser<'a, 'b> {
         let mut params = vec![];
         loop {
             match_next!(self, {
-                Identifier(name) => params.push(name.to_owned()),
+                Identifier(name) => params.push((*name).to_owned()),
             }).ok_or_else(||
                 ParserError {
                     cause: "Expected an indentifier".to_owned(),
@@ -413,7 +413,7 @@ impl<'a: 'b, 'b> Parser<'a, 'b> {
                         expr = Binary(
                             Index,
                             Box::new(expr),
-                            Box::new(Literal(name.into()))
+                            Box::new(Literal((*name).into()))
                         )
                     },
                 }).ok_or_else(|| {
@@ -431,9 +431,9 @@ impl<'a: 'b, 'b> Parser<'a, 'b> {
         }
 
         match_next!(self, {
-            Number(val) => Literal(val.into()),
-            String(val) => Literal(val.into()),
-            Identifier(id) => Var(id.to_owned()),
+            Number(val) => Literal((*val).into()),
+            String(val) => Literal(val.as_str().into()),
+            Identifier(id) => Var((*id).to_owned()),
 
             True => Literal(true.into()),
             False => Literal(false.into()),
@@ -504,7 +504,7 @@ impl<'a: 'b, 'b> Parser<'a, 'b> {
                 break;
             } else  {
                 let name = match_next!(self, {
-                    Identifier(name) => name.to_owned(),
+                    Identifier(name) => (*name).to_owned(),
                 }).ok_or_else(|| ParserError {
                     cause: "Expected an identifier".to_string(),
                     responsible: self.peek(),
