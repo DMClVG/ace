@@ -1,4 +1,5 @@
 use std::{fmt::Display, rc::Rc, cell::RefCell, collections::HashMap};
+use fxhash::{FxBuildHasher};
 
 #[derive(Debug, Clone)]
 pub enum BinaryOperator {
@@ -40,10 +41,20 @@ impl std::fmt::Debug for Fun {
 
 #[derive(Debug, Clone, Default)]
 pub struct Object {
-    pub fields: HashMap<String, Value>,
+    pub fields: HashMap<String, Value, FxBuildHasher>,
+}
+
+impl FromIterator<(String, Value)> for Object {
+    fn from_iter<T: IntoIterator<Item = (String, Value)>>(iter: T) -> Self {
+        Self { fields: iter.into_iter().collect::<_>() }
+    }
 }
 
 impl Object {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
     pub fn set(&mut self, name: String, val: Value) {
         if !val.is_nil() {
             self.fields.insert(name, val);

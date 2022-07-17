@@ -1,4 +1,4 @@
-use std::{cell::RefCell, collections::HashMap, rc::Rc, time::SystemTime, ops::{Deref, DerefMut}};
+use std::{cell::RefCell, rc::Rc, time::SystemTime, ops::{Deref, DerefMut}};
 
 use crate::ast::*;
 
@@ -212,19 +212,15 @@ impl Expression {
                     Call => a.call(b),
                 }
             }
-            Self::List(exprs) => Value::List(Rc::new(RefCell::new(
-                exprs
+            Self::List(exprs) => exprs
                     .iter()
                     .map(|expr| expr.evaluate(s))
-                    .collect::<Vec<Value>>(),
-            ))),
-            Self::Pairs(pairs) => Value::Object(Rc::new(RefCell::new(Object {
-                fields: pairs
+                    .collect::<Vec<Value>>().into(),
+            Self::Pairs(pairs) => pairs
                     .iter()
                     .map(|(k, v)| (k.to_owned(), v.evaluate(s)))
                     .filter(|(_, v)| !v.is_nil())
-                    .collect::<HashMap<String, Value>>(),
-            }))),
+                    .collect::<Object>().into(),
             Self::Grouping(expr) => expr.evaluate(s),
         }
     }
