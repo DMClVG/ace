@@ -318,7 +318,7 @@ impl<'a> Lexer<'a> {
                 _ => {
                     if let Ok(num) = word.parse::<f64>() {
                         TokenKind::Number(num)
-                    } else if word.starts_with(char::is_alphabetic) {
+                    } else if word.starts_with(char::is_alphabetic) || word.starts_with("_") {
                         // if word.starts_with(char::is_numeric) {
                         //     let num = word.split_at(word.find(|c: char| { c.is_numeric() || c == '.'}).unwrap() + 1);
                         //     TokenKind::Coefficient(num.0.parse().unwrap(), num.1)
