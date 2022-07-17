@@ -110,6 +110,12 @@ pub struct Token<'a> {
     pub span: Range<usize>,
 }
 
+#[derive(Debug, Clone)]
+pub struct LexerError<'a> {
+    pub responsible: Token<'a>,
+    pub cause: String,
+}
+
 struct SplitWord<'a> {
     input: &'a str,
     pos: usize,
@@ -220,7 +226,7 @@ impl<'a> Lexer<'a> {
         Self { input }
     }
 
-    pub fn lex(&mut self) -> Vec<Token> {
+    pub fn lex(&mut self) -> Result<Vec<Token>, LexerError> {
         let mut tokens = Vec::new();
 
         let words = SplitWord::new(self.input).collect::<Vec<Word>>();
@@ -305,7 +311,7 @@ impl<'a> Lexer<'a> {
                         }
                     }
                     TokenKind::try_from_escaped_string(
-                        &self.input[s.expect("String never terminated!")],
+                        &self.input[s.ok_or(LexerError { cause: "String never terminated".to_owned(), responsible: Token { kind: TokenKind::Invalid, col, line, span: span.clone() }})?],
                     )
                     .unwrap()
                 }
@@ -320,7 +326,7 @@ impl<'a> Lexer<'a> {
                         TokenKind::Identifier(&word)
                         // }
                     } else {
-                        TokenKind::Invalid
+                        Err(LexerError { cause: "Is not a valid token".to_owned(), responsible: Token { kind: TokenKind::Invalid, col, line, span: span.clone() } })?
                     }
                 }
             };
@@ -337,7 +343,7 @@ impl<'a> Lexer<'a> {
             col: 0,
             span: Default::default(),
         });
-        tokens
+        Ok(tokens)
     }
 }
 
@@ -354,6 +360,7 @@ mod test {
         assert_eq!(
             lexer
                 .lex()
+                .unwrap()
                 .into_iter()
                 .map(|t| { t.kind })
                 .collect::<Vec<TokenKind>>(),

@@ -3,8 +3,11 @@ mod ast;
 mod parser;
 mod interpreter;
 
+use std::process::exit;
+
 use colored::*;
 
+use lexer::Token;
 use structopt::StructOpt;
 
 #[derive(StructOpt)]
@@ -19,21 +22,30 @@ fn main() {
 
     let mut lexer = lexer::Lexer::from_str(input.as_str());
     let tokens = lexer.lex();
+    if let Err(err) = &tokens {
+        error(input.lines(), err.cause.to_owned(), &err.responsible);
+    }
 
+    let tokens = tokens.unwrap();
     let parser = parser::Parser::new(&tokens);
     let result = parser.parse();
 
     if let Err(errs) = result {
         for err in errs {
-            let prefix = format!("{}: on line {}: ", "ERROR", err.responsible.line + 1);
-            
-            eprintln!("{}{}", prefix.red().bold(), input.lines().nth(err.responsible.line).unwrap());
-            eprintln!("{}{} {}", " ".repeat(prefix.len() + err.responsible.col), "^".repeat(err.responsible.span.len()).red().bold(), err.cause.red().bold());
-            println!();
+            error(input.lines(), err.cause, err.responsible);
         }
     } else if let Ok(code) = result {
-        // dbg!(&code);
         let global = interpreter::new();
         code.execute(global);
     }
 }
+
+fn error<'a>(mut file: impl Iterator<Item=&'a str>, cause: String, responsible: &Token) {
+    let prefix = format!("{}: on line {}: ", "ERROR", responsible.line + 1);
+            
+    eprintln!("{}{}", prefix.red().bold(), file.nth(responsible.line).unwrap());
+    eprintln!("{}{} {}", " ".repeat(prefix.len() + responsible.col), "^".repeat(responsible.span.len()).red().bold(), cause.red().bold());
+    println!();
+
+    exit(-1);
+} 
