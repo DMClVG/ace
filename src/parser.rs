@@ -1,6 +1,7 @@
 use crate::lexer::{Token, TokenKind, TokenKind::*};
 
-use crate::ast::{BinaryOperator::*, Expression::*, Expression, UnaryOperator::*, Statement, Value};
+use crate::ast::{BinaryOperator::*, Expression::*, Expression, UnaryOperator::*, Statement};
+use crate::value::Value;
 
 pub struct Parser<'a, 'b> {
     tokens: &'a [Token<'b>],

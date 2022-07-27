@@ -2,6 +2,7 @@ mod lexer;
 mod ast;
 mod parser;
 mod interpreter;
+mod value;
 
 use std::process::exit;
 
@@ -36,7 +37,7 @@ fn main() {
         }
     } else if let Ok(code) = result {
         let global = interpreter::new();
-        code.execute(global);
+        code.execute(global).ok();
     }
 }
 
