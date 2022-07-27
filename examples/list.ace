@@ -1,12 +1,10 @@
-{
     
-    array = [0, 1]
+array = [0, 1]
 
-    array[0] = 3
+array[0] = 3
 
-    if array == [2, 1] {
-        io.print(array + " is equal to " + [2, 1])
-    } else {
-        io.print(array + " is not equal to " + [2, 1])
-    }
+if array == [2, 1] {
+    io.print(array + " is equal to " + [2, 1])
+} else {
+    io.print(array + " is not equal to " + [2, 1])
 }

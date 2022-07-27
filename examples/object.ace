@@ -1,14 +1,12 @@
-{
-    cat = :{ # objects must start with a :{
-        happy: true,
-        unhappy: false,
-    }
+cat = :{ # objects must start with a :{
+    happy: true,
+    unhappy: false,
+}
 
-    io.print(cat["happy"]) # objects can be indexed with strings
-    io.print(cat.unhappy) # or with a field name
-    io.print(cat)
+io.print(cat["happy"]) # objects can be indexed with strings
+io.print(cat.unhappy) # or with a field name
+io.print(cat)
 
-    if cat == :{ happy: true, unhappy: false } {
-        io.print("yay happy 🥰")
-    }
+if cat == :{ happy: true, unhappy: false } {
+    io.print("yay happy 🥰")
 }
