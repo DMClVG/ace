@@ -192,9 +192,9 @@ pub enum Statement {
     If(Box<Statement>, Box<Statement>, Option<Box<Statement>>),
     While(Box<Statement>, Box<Statement>),
     Expr(Expression),
-    Return(Box<Statement>),
-    Break,
-    Continue
+    Return(Option<Box<Statement>>),
+    // Break,
+    // Continue
 }
 
 #[macro_export]

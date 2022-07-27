@@ -122,17 +122,17 @@ pub fn new() -> Rc<RefCell<Scope>> {
 }
 
 impl Statement {
-    pub fn execute(&self, s: Rc<RefCell<Scope>>) -> Value {
+    pub fn execute(&self, s: Rc<RefCell<Scope>>) -> Result<Value, Value> {
         match self {
             Statement::Expr(expr) => {
-                return expr.evaluate(&s.borrow());
+                return Ok(expr.evaluate(&s.borrow()));
             }
             Statement::Assign(dest, stmt) => {
-                let to = stmt.execute(s.clone());
+                let to = stmt.execute(s.clone())?;
                 dest.evaluate_deref_assign(&mut s.borrow_mut(), to);
             }
             Statement::If(condition, block, else_block) => {
-                let condition = condition.execute(s.clone());
+                let condition = condition.execute(s.clone())?;
                 if condition.is_true() {
                     return block.execute(s);
                 } else if let Some(e) = else_block {
@@ -140,9 +140,9 @@ impl Statement {
                 }
             }
             Statement::While(condition, block) => {
-                while condition.execute(s.clone()).is_true() {
+                while condition.execute(s.clone())?.is_true() {
                     // collect in a list??
-                    block.execute(s.clone());
+                    block.execute(s.clone())?;
                 }
             }
             Statement::Block(stmts, scoped) => { // have bool to tell if scoped or not
@@ -155,7 +155,7 @@ impl Statement {
                     if i == stmts.len() - 1 {
                         return stmt.execute(s.clone());
                     }
-                    stmt.execute(s.clone());
+                    stmt.execute(s.clone())?;
                 }
             }
             Statement::FunDecl(params, block) => {
@@ -173,14 +173,20 @@ impl Statement {
                             s.set(param.to_owned(), args[i].clone());
                         }
                     }
-                    block.execute(s)
+                    match block.execute(s) {
+                        Ok(v) => v,
+                        Err(v) => v
+                    }
                 }));
 
-                return Value::Fun(Rc::new(fun));
+                return Ok(Value::Fun(Rc::new(fun)));
             }
-            _ => { todo!() }
+            Statement::Return(val) => {
+                return Err(val.as_ref().map_or(Value::Nil, |stmt| stmt.execute(s).unwrap_or_else(|v| v)))
+            }
+            _ => { unreachable!() }
         }
-        return Value::Nil;
+        return Ok(Value::Nil)
     }
 }
 
@@ -251,10 +257,10 @@ impl Expression {
 }
 
 impl Value {
-    pub fn call(&self, arg: Value) -> Value {
+    pub fn call(&self, args: Value) -> Value {
         use Value::*;
-        match (self, arg) {
-            (Fun(body), arg) => body.0(arg),
+        match (self, args) {
+            (Fun(body), args) => body.0(args),
             _ => Value::Nil,
         }
     }

@@ -97,9 +97,13 @@ impl<'a: 'b, 'b> Parser<'a, 'b> {
                 let body = self.block(false)?;
                 Ok(Statement::While(Box::new(condition), Box::new(body)))
             },
-            Return => Ok(Statement::Return(Box::new(self.statement()?))),
-            Break => Ok(Statement::Break),
-            Continue => Ok(Statement::Continue),
+            Return => {
+                if self.peek().kind == TokenKind::RBraces {
+                    Ok(Statement::Return(None))
+                } else {
+                    Ok(Statement::Return(Some(Box::new(self.expression_stmt()?)))) // TODO: make any statement returnable (except return itself?)
+                }
+            },
             LBraces => {
                 self.statements(RBraces).map(|stmts| Statement::Block(stmts, true))
             },
