@@ -163,11 +163,14 @@ impl Statement {
                 let params = params.to_owned();
                 
                 let fun = Fun(Box::new(move |args| {
+                    let args  = if let Value::List(list) = args { list } else { unreachable!() };
+                    let args = args.borrow();
+                    
                     let s = Rc::new(RefCell::new(Scope { enclosing: Some(s.clone()), ..Default::default()}));
                     {
                         let mut s = s.borrow_mut();
-                        for (i, param) in params.iter().enumerate() {
-                            s.set(param.to_owned(), args.index(Value::Number(i as f64)));
+                        for (i, param) in params.iter().take(args.len()).enumerate() {
+                            s.set(param.to_owned(), args[i].clone());
                         }
                     }
                     block.execute(s)
