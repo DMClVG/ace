@@ -24,6 +24,12 @@ pub enum TokenKind<'a> {
     LBrackets,
     RBrackets,
 
+    AddAssign,
+    SubAssign,
+    MulAssign,
+    DivAssign,
+    ModAssign,
+
     And,
     Or,
     If,
@@ -227,6 +233,7 @@ impl<'a> Lexer<'a> {
     }
 
     pub fn lex(&mut self) -> Result<Vec<Token>, LexerError> {
+        use TokenKind::*;
         let mut tokens = Vec::new();
 
         let words = SplitWord::new(self.input).collect::<Vec<Word>>();
@@ -248,18 +255,42 @@ impl<'a> Lexer<'a> {
                         Some(&Word { body: "=", .. }) => {
                             iter.next(); // Skip element
                             match op {
-                                "<" => TokenKind::LesserOrEq,
-                                ">" => TokenKind::GreaterOrEq,
-                                "=" => TokenKind::Equal,
-                                "!" => TokenKind::Unequal,
+                                "<" => LesserOrEq,
+                                ">" => GreaterOrEq,
+                                "=" => Equal,
+                                "!" => Unequal,
                                 _ => unreachable!(),
                             }
                         }
                         _ => match op {
-                            "<" => TokenKind::Lesser,
-                            ">" => TokenKind::Greater,
-                            "=" => TokenKind::Assign,
-                            "!" => TokenKind::Exclamation,
+                            "<" => Lesser,
+                            ">" => Greater,
+                            "=" => Assign,
+                            "!" => Exclamation,
+                            _ => unreachable!(),
+                        },
+                    }
+                },
+
+                op @ ("+" | "-" | "/" | "*" | "%") => {
+                    match iter.peek() {
+                        Some(&Word { body: "=", .. }) => {
+                            iter.next(); // Skip element
+                            match op {
+                                "+" => AddAssign,
+                                "-" => SubAssign,
+                                "/" => DivAssign,
+                                "*" => MulAssign,
+                                "%" => ModAssign,
+                                _ => unreachable!(),
+                            }
+                        }
+                        _ => match op {
+                            "+" => Plus,
+                            "-" => Minus,
+                            "/" => Slash,
+                            "*" => Asterisk,
+                            "%" => Percent,
                             _ => unreachable!(),
                         },
                     }
@@ -268,34 +299,29 @@ impl<'a> Lexer<'a> {
                     commented = Some(line);
                     continue;
                 }
-                "." => TokenKind::Period,
-                "(" => TokenKind::LParenthese,
-                ")" => TokenKind::RParenthese,
-                "{" => TokenKind::LBraces,
-                "}" => TokenKind::RBraces,
-                "[" => TokenKind::LBrackets,
-                "]" => TokenKind::RBrackets,
-                "," => TokenKind::Comma,
-                ":" => TokenKind::Colon,
-                "and" => TokenKind::And,
-                "or" => TokenKind::Or,
-                "if" => TokenKind::If,
-                "else" => TokenKind::Else,
-                "while" => TokenKind::While,
-                "for" => TokenKind::For,
-                "loop" => TokenKind::Loop,
-                "*" => TokenKind::Asterisk,
-                "+" => TokenKind::Plus,
-                "-" => TokenKind::Minus,
-                "/" => TokenKind::Slash,
-                "%" => TokenKind::Percent,
-                "true" => TokenKind::True,
-                "false" => TokenKind::False,
-                "fun" => TokenKind::Fun,
-                "nil" => TokenKind::Nil,
-                "continue" => TokenKind::Continue,
-                "break" => TokenKind::Break,
-                "return" => TokenKind::Return,
+                "." => Period,
+                "(" => LParenthese,
+                ")" => RParenthese,
+                "{" => LBraces,
+                "}" => RBraces,
+                "[" => LBrackets,
+                "]" => RBrackets,
+                "," => Comma,
+                ":" => Colon,
+                "and" => And,
+                "or" => Or,
+                "if" => If,
+                "else" => Else,
+                "while" => While,
+                "for" => For,
+                "loop" => Loop,
+                "true" => True,
+                "false" => False,
+                "fun" => Fun,
+                "nil" => Nil,
+                "continue" => Continue,
+                "break" => Break,
+                "return" => Return,
                 "\"" => {
                     let mut s: Option<Range<usize>> = None;
                     let mut escaped = false;
@@ -311,22 +337,22 @@ impl<'a> Lexer<'a> {
                         }
                     }
                     TokenKind::try_from_escaped_string(
-                        &self.input[s.ok_or(LexerError { cause: "String never terminated".to_owned(), responsible: Token { kind: TokenKind::Invalid, col, line, span: span.clone() }})?],
+                        &self.input[s.ok_or(LexerError { cause: "String never terminated".to_owned(), responsible: Token { kind: Invalid, col, line, span: span.clone() }})?],
                     )
                     .unwrap()
                 }
                 _ => {
                     if let Ok(num) = word.parse::<f64>() {
-                        TokenKind::Number(num)
+                        Number(num)
                     } else if word.starts_with(char::is_alphabetic) || word.starts_with("_") {
                         // if word.starts_with(char::is_numeric) {
                         //     let num = word.split_at(word.find(|c: char| { c.is_numeric() || c == '.'}).unwrap() + 1);
-                        //     TokenKind::Coefficient(num.0.parse().unwrap(), num.1)
+                        //     Coefficient(num.0.parse().unwrap(), num.1)
                         // } else {
-                        TokenKind::Identifier(&word)
+                        Identifier(&word)
                         // }
                     } else {
-                        Err(LexerError { cause: "Is not a valid token".to_owned(), responsible: Token { kind: TokenKind::Invalid, col, line, span: span.clone() } })?
+                        Err(LexerError { cause: "Is not a valid token".to_owned(), responsible: Token { kind: Invalid, col, line, span: span.clone() } })?
                     }
                 }
             };
@@ -338,7 +364,7 @@ impl<'a> Lexer<'a> {
             });
         }
         tokens.push(Token {
-            kind: TokenKind::EOF,
+            kind: EOF,
             line: 0,
             col: 0,
             span: Default::default(),

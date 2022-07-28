@@ -57,7 +57,7 @@ pub fn new() -> Rc<RefCell<Scope>> {
     use Value::*;
 
     let print: FunDef = Box::new(move |args: Value| {
-        println!("{}", args.index(0));
+        println!("{}", args.index(&0.into()));
         Nil
     });
 
@@ -70,8 +70,8 @@ pub fn new() -> Rc<RefCell<Scope>> {
     });
 
     let push: FunDef = Box::new(|args: Value| {
-        if let List(list) = args.index(0) {
-            list.borrow_mut().push(args.index(1));
+        if let List(list) = args.index(&0.into()) {
+            list.borrow_mut().push(args.index(&1.into()));
         }
         Nil
     });
@@ -86,7 +86,7 @@ pub fn new() -> Rc<RefCell<Scope>> {
     });
 
     let parse: FunDef = Box::new(|args: Value| {
-        if let String(s) = args.index(0) {
+        if let String(s) = args.index(&0.into()) {
             if let Ok(num) = s.parse::<f64>() {
                 Number(num)
             } else {
@@ -133,8 +133,28 @@ impl Statement {
             }
             Statement::Assign(dest, stmt) => {
                 let to = stmt.execute(s.clone())?;
-                dest.evaluate_deref_assign(&mut s.borrow_mut(), to);
-            }
+                dest.evaluate_deref_assign(&mut s.borrow_mut(), to, None);
+            },
+            Statement::AddAssign(dest, stmt) => {
+                let add = stmt.execute(s.clone())?;
+                dest.evaluate_deref_assign(&mut s.borrow_mut(), add, Some(|a, b| a + b));
+            },
+            Statement::SubAssign(dest, stmt) => {
+                let sub = stmt.execute(s.clone())?;
+                dest.evaluate_deref_assign(&mut s.borrow_mut(), sub, Some(|a, b| a - b));
+            },
+            Statement::MulAssign(dest, stmt) => {
+                let mul = stmt.execute(s.clone())?;
+                dest.evaluate_deref_assign(&mut s.borrow_mut(), mul, Some(|a, b| a * b));
+            },
+            Statement::DivAssign(dest, stmt) => {
+                let div = stmt.execute(s.clone())?;
+                dest.evaluate_deref_assign(&mut s.borrow_mut(), div, Some(|a, b| a / b));
+            },
+            Statement::ModAssign(dest, stmt) => {
+                let modulo = stmt.execute(s.clone())?;
+                dest.evaluate_deref_assign(&mut s.borrow_mut(), modulo, Some(|a, b| a % b));
+            },
             Statement::If(condition, block, else_block) => {
                 let condition = condition.execute(s.clone())?;
                 if condition.is_true() {
@@ -200,7 +220,8 @@ impl Statement {
                 return Err(val
                     .as_ref()
                     .map_or(Value::Nil, |stmt| stmt.execute(s).unwrap_or_else(|v| v)))
-            }
+            },
+            _ => { unimplemented!() }
         }
         return Ok(Value::Nil);
     }
@@ -234,7 +255,7 @@ impl Expression {
                     Modulo => a % b,
                     DoAnd => Value::Bool(a.into() && b.into()),
                     DoOr => Value::Bool(a.into() || b.into()),
-                    Index => a.index(b),
+                    Index => a.index(&b),
                     Call => a.call(b),
                 }
             }
@@ -253,18 +274,32 @@ impl Expression {
         }
     }
 
-    pub fn evaluate_deref_assign(&self, s: &mut Scope, n: Value) {
+    pub fn evaluate_deref_assign(&self, s: &mut Scope, n: Value, procedure: Option<fn(a: Value, b: Value) -> Value>) {
         match self {
             Self::Var(var) => {
-                s.set(var.to_owned(), n);
+                if let Some(procedure) = procedure {
+                    let a = s.get(var);
+                    let b = n;
+                    s.set(var.to_owned(), procedure(a, b))
+                } else {
+                    s.set(var.to_owned(), n);
+                }
                 return;
             }
             Self::Binary(op, left, right) => {
                 use BinaryOperator::*;
-                let mut a = left.evaluate(s);
-                let b = right.evaluate(s);
                 match op {
-                    Index => a.index_set(b, n),
+                    Index => {
+                        let mut p = left.evaluate(s);
+                        let i = right.evaluate(s);
+                        if let Some(procedure) = procedure {
+                            let a = p.index(&i);
+                            let b = n;
+                            p.index_set(i, procedure(a, b))
+                        } else {
+                            p.index_set(i, n)
+                        }
+                    },
                     _ => {}
                 }
                 return;
@@ -273,4 +308,5 @@ impl Expression {
         }
         self.evaluate(s); // if isn't dereferencable, just evaluate
     }
+    
 }

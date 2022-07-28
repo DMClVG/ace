@@ -315,13 +315,13 @@ impl Value {
         }
     }
 
-    pub fn index(&self, i: impl Into<Value>) -> Value {
+    pub fn index(&self, i: &Value) -> Value {
         use Value::*;
-        match (self, i.into()) {
+        match (self, i) {
             (Object(obj), _) if obj.borrow().fields.len() == 0 => Nil,
             (Object(obj), String(s)) => {
                 let obj = obj.borrow();
-                obj.get(&s).clone()
+                obj.get(s).clone()
             },
             (Object(obj), Number(i)) => {
                 let obj = obj.borrow();

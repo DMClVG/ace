@@ -18,6 +18,12 @@ pub enum Expression {
 pub enum Statement {
     Block(Block, bool),
     Assign(Expression, Box<Statement>),
+    AddAssign(Expression, Box<Statement>),
+    SubAssign(Expression, Box<Statement>),
+    MulAssign(Expression, Box<Statement>),
+    DivAssign(Expression, Box<Statement>),
+    ModAssign(Expression, Box<Statement>),
+
     FunDecl(Vec<String>, Box<Statement>),
     If(Box<Statement>, Box<Statement>, Option<Box<Statement>>),
     While(Box<Statement>, Box<Statement>),

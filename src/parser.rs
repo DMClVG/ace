@@ -122,6 +122,26 @@ impl<'a: 'b, 'b> Parser<'a, 'b> {
                     Assign => {
                         let to = self.statement()?;
                         Ok(Statement::Assign(expr.clone(), Box::new(to))) // TODO: remove this clone
+                    },
+                    AddAssign => {
+                        let add = self.statement()?;
+                        Ok(Statement::AddAssign(expr.clone(), Box::new(add)))
+                    },
+                    SubAssign => {
+                        let sub = self.statement()?;
+                        Ok(Statement::SubAssign(expr.clone(), Box::new(sub)))
+                    },
+                    MulAssign => {
+                        let mul = self.statement()?;
+                        Ok(Statement::MulAssign(expr.clone(), Box::new(mul)))
+                    },
+                    DivAssign => {
+                        let div = self.statement()?;
+                        Ok(Statement::DivAssign(expr.clone(), Box::new(div)))
+                    },
+                    ModAssign => {
+                        let modulo = self.statement()?;
+                        Ok(Statement::ModAssign(expr.clone(), Box::new(modulo)))
                     }
                 })
                 .unwrap_or_else(|| Ok(Statement::Expr(expr)))
