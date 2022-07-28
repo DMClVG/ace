@@ -102,7 +102,7 @@ impl<'a: 'b, 'b> Parser<'a, 'b> {
                 if self.peek().kind == TokenKind::RBraces {
                     Ok(Statement::Return(None))
                 } else {
-                    Ok(Statement::Return(Some(Box::new(self.expression_stmt()?)))) // TODO: make any statement returnable (except return itself?)
+                    Ok(Statement::Return(Some(Box::new(self.statement()?)))) // TODO: make any statement returnable (except return itself?)
                 }
             },
             LBraces => {
