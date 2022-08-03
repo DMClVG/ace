@@ -1,7 +1,8 @@
     
 array = [0, 1]
 
-array[0] = 3
+array += [4]
+array[-1] = 2 # gets last element
 
 if array == [2, 1] {
     io.print(array + " is equal to " + [2, 1])
