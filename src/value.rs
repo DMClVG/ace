@@ -267,12 +267,9 @@ impl Neg for Value {
 
 impl PartialOrd for Value {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        use Value::*;
-        match (self, other) {
-            (Number(a), Number(b)) => a.partial_cmp(b),
-            (String(a), String(b)) => a.len().partial_cmp(&b.len()),
-            (_, _) => None,
-        }
+        let ord_a = self.order();
+        let ord_b = other.order();
+        ord_a.partial_cmp(&ord_b)
     }
 }
 
@@ -368,7 +365,7 @@ impl Iterator for IterValue {
                     .nth(self.i)
                     .map(|(k, v)| Value::from(list![Value::from(&k[..]), v.to_owned()]));
                 next
-            },
+            }
             Value::Fun(fun) => {
                 let next = fun.0(list![].into());
                 if next.is_nil() {
@@ -376,15 +373,16 @@ impl Iterator for IterValue {
                 } else {
                     Some(next)
                 }
-            },
+            }
             Value::String(s) => {
-                s.chars().nth(self.i).map(|c| { // stupidly slow & unoptimized
+                s.chars().nth(self.i).map(|c| {
+                    // stupidly slow & unoptimized
                     let mut str: [u8; 4] = [0; 4];
                     c.encode_utf8(&mut str);
                     let str = std::str::from_utf8(&str).unwrap();
                     Value::from(str)
                 })
-            },
+            }
             _ => None,
         };
         self.i += 1;
@@ -398,6 +396,16 @@ impl Value {
         match (self, args) {
             (Fun(body), args) => body.0(args),
             _ => Value::Nil,
+        }
+    }
+
+    pub fn order(&self) -> f64 {
+        match self {
+            Self::String(s) => s.len() as f64,
+            Self::List(list) => list.borrow().len() as f64,
+            Self::Number(n) => *n,
+            Self::Object(obj) => obj.borrow().fields.len() as f64,
+            _ => -f64::INFINITY
         }
     }
 
