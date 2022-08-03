@@ -24,32 +24,51 @@ impl From<Object> for Scope {
     }
 }
 
+pub struct ScopeWalker {
+    current: Rc<RefCell<Scope>>
+}
+
+
 impl Scope {
+
     pub fn get(&self, name: &str) -> Value {
-        match Object::get(self, name) {
-            Value::Nil => {
-                if let Some(ref enclosing) = self.enclosing {
-                    Self::get(&enclosing.borrow(), name)
-                } else {
-                    Value::Nil
-                }
+        let ret = self.inner.get(name);
+        if !ret.is_nil() {
+            return ret;
+        }
+
+        let mut scope = self.enclosing.clone();
+        while let Some(s) = scope {
+            let s = s.borrow();
+            let value = s.inner.get(name);
+            if !value.is_nil()  {
+                return value;
+            } else {
+                scope = s.enclosing.clone();
             }
-            v => v,
+        }
+        Value::Nil
+    }
+
+    pub fn assign(&mut self, name: &str, val: Value) {
+        if let Some(field) = self.inner.fields.get_mut(name) {
+            *field = val;
+            return;
+        }
+        let mut scope = self.enclosing.clone();
+        while let Some(s) = scope {
+            let mut s = s.borrow_mut();
+            if let Some(field) = s.inner.fields.get_mut(name) {
+                *field = val;
+                return;
+            } else {
+                scope = s.enclosing.clone();
+            }
         }
     }
-}
 
-impl Deref for Scope {
-    type Target = Object;
-
-    fn deref(&self) -> &Self::Target {
-        &self.inner
-    }
-}
-
-impl DerefMut for Scope {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.inner
+    pub fn declare(&mut self, name: String, val: Value) {
+        self.inner.set(name, val);
     }
 }
 
@@ -130,7 +149,11 @@ impl Statement {
         match self {
             Statement::Expr(expr) => {
                 return Ok(expr.evaluate(&s.borrow()));
-            }
+            },
+            Statement::Declare(id, stmt) => {
+                let to = stmt.execute(s.clone())?;
+                s.borrow_mut().declare(id.to_owned(), to);
+            },
             Statement::Assign(dest, stmt) => {
                 let to = stmt.execute(s.clone())?;
                 dest.evaluate_deref_assign(&mut s.borrow_mut(), to, None);
@@ -165,17 +188,16 @@ impl Statement {
             },
             Statement::For(ids, iterated, block) =>  {
                 let iter = iterated.execute(s.clone())?;
-
                 for value in iter {
                     match value {
                         Value::Nil => break,
                         Value::List(list) => {
                             for (id, v) in ids.iter().zip(list.borrow().iter()) {
-                                s.borrow_mut().set(id.to_owned(), v.clone())
+                                s.borrow_mut().declare(id.to_owned(), v.clone())
                             }
                         },
                         _ => {
-                            s.borrow_mut().set(ids[0].to_owned(), value);
+                            s.borrow_mut().declare(ids[0].to_owned(), value);
                         }
                     }
                     block.execute(s.clone())?;
@@ -223,7 +245,7 @@ impl Statement {
                     {
                         let mut s = s.borrow_mut();
                         for (i, param) in params.iter().take(args.len()).enumerate() {
-                            s.set(param.to_owned(), args[i].clone());
+                            s.declare(param.to_owned(), args[i].clone());
                         }
                     }
                     match block.execute(s) {
@@ -298,9 +320,9 @@ impl Expression {
                 if let Some(procedure) = procedure {
                     let a = s.get(var);
                     let b = n;
-                    s.set(var.to_owned(), procedure(a, b))
+                    s.assign(var.as_str(), procedure(a, b))
                 } else {
-                    s.set(var.to_owned(), n);
+                    s.assign(var.as_str(), n);
                 }
                 return;
             }

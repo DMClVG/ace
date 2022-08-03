@@ -1,17 +1,12 @@
 { # '0
-    x = 1
+    let x = 1
     io.print("Scope '0: x=" + x) # >>> 1
 
-    function = { # '1
+    { # '1
         io.print("Scope '1: x=" + x) # >>> 1
-        x = -1 # this does not affect the x of the outer scope
+        let x = -1 # this does not affect the x of the outer scope
         io.print("Scope '1: x=" + x) # >>> -1
-
-        fun {
-            io.print("Captured scope '1: x=" + x) # x will be captured from scope '1
-        }
     }
 
     io.print("Scope '0: x=" + x) # >>> 1
-    function()  # >>> -1
 }

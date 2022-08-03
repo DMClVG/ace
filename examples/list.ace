@@ -1,5 +1,5 @@
     
-array = [0, 1]
+let array = [0, 1]
 
 array += [4]
 array[-1] = 2 # gets last element

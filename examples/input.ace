@@ -1,6 +1,6 @@
 io.print("What is A?")
-a = io.input()
-parsedA = std.parse(a)
+let a = io.input()
+let parsedA = std.parse(a)
 
 if parsedA != nil {
     a = parsedA
@@ -8,8 +8,8 @@ if parsedA != nil {
 
 io.print("What is B?")
 
-b = io.input()
-parsedB = std.parse(b)
+let b = io.input()
+let parsedB = std.parse(b)
 if parsedB != nil {
     b = parsedB
 }

@@ -1,5 +1,5 @@
-array = ["a", "b", "c"]
-obj = :{h:"a",b:"de",c:"ee"}
+let array = ["a", "b", "c"]
+let obj = :{h:"a",b:"de",c:"ee"}
 
 for k, v in obj {
   io.print(k + ": " + v)

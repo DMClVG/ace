@@ -26,7 +26,7 @@ syntax.add {
         ["and"] = "keyword",
         ["or"] = "keyword",
         ["loop"] = "keyword",
-
+        ["let"] = "keyword",
         ["nil"] = "literal",
         ["true"] = "literal",
         ["false"] = "literal",

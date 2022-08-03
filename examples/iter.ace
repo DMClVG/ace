@@ -1,9 +1,9 @@
-range = fun: min,max,step {
-  state = :{i: min} # has to be an object/array to be modifiable in other scopes (subject to change)
+let range = fun: min,max,step {
+  let i = min
   fun {
-    if state.i < max {
-      ret = state.i
-      state.i += step
+    if i < max {
+      let ret = i
+      i += step
       return ret
     } else {
       return nil
@@ -12,5 +12,9 @@ range = fun: min,max,step {
 }
 
 for i in range(4,20,2) {
+  io.print(i)
+}
+
+for i in ["a","b","c"] {
   io.print(i)
 }

@@ -83,6 +83,12 @@ impl<'a: 'b, 'b> Parser<'a, 'b> {
         }
 
         match_next!(self, {
+            Let => {
+                let id = self.identifier().map_err(|err| vec![err])?;
+                match_next!(self, { Assign => () }).ok_or(vec![ParserError { cause: "Expected \"=\" here".to_string(), responsible: self.peek()}])?;
+                let assignee = self.statement()?;
+                Ok(Statement::Declare(id, Box::new(assignee)))
+            },
             If => {
                 let condition = self.expression_stmt()?;
                 let body = self.block(false)?;
@@ -220,20 +226,22 @@ impl<'a: 'b, 'b> Parser<'a, 'b> {
         }
         res
     }
+
+    fn identifier(&mut self) -> Result<std::string::String, ParserError<'b>> {
+        match_next!(self, {
+            Identifier(name) => name.to_string()
+        }).ok_or(ParserError {
+            cause: "Expected an indentifier".to_owned(),
+            responsible: self.peek(),
+        })
+    }
     
     fn identifiers(
         &mut self
     ) -> Result<Vec<std::string::String>, ParserError<'b>> {
         let mut params = vec![];
         loop {
-            match_next!(self, {
-                Identifier(name) => params.push((*name).to_owned()),
-            }).ok_or_else(||
-                ParserError {
-                    cause: "Expected an indentifier".to_owned(),
-                    responsible: self.peek(),
-                }
-            )?;
+            params.push(self.identifier()?);
 
             if self.match_adv(&Comma) {
                 continue;

@@ -7,6 +7,7 @@ pub enum TokenKind<'a> {
     Identifier(&'a str),
     // Coefficient(f64, &'a str),
     Assign,
+    Let,
 
     Lesser,
     Greater,
@@ -320,6 +321,7 @@ impl<'a> Lexer<'a> {
                 "true" => True,
                 "false" => False,
                 "fun" => Fun,
+                "let" => Let,
                 "nil" => Nil,
                 "continue" => Continue,
                 "break" => Break,

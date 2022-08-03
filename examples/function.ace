@@ -1,15 +1,15 @@
-say = io.print
+let say = io.print
 
-shout = fun: x {
+let shout = fun: x {
     say(x + "!")
 }
 
-ask = fun: x, nQuestionMarks {
+let ask = fun: x, nQuestionMarks {
     question_marks = if nQuestionMarks == nil {
         "?"
     } else {
-        res = ""
-        i = 0
+        let res = ""
+        let i = 0
         while i <= nQuestionMarks {
             res = res + "?"
             i = i + 1
@@ -19,7 +19,7 @@ ask = fun: x, nQuestionMarks {
     say(x + question_marks)
 }
 
-say_hi = fun {
+let say_hi = fun {
     say("hi")
 }
 

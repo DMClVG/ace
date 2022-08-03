@@ -17,6 +17,7 @@ pub enum Expression {
 #[derive(Debug, Clone)]
 pub enum Statement {
     Block(Block, bool),
+    Declare(String, Box<Statement>),
     Assign(Expression, Box<Statement>),
     AddAssign(Expression, Box<Statement>),
     SubAssign(Expression, Box<Statement>),

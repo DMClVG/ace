@@ -1,8 +1,8 @@
-start = os.clock() # clock returns current UNIX time in seconds
+let start = os.clock() # clock returns current UNIX time in seconds
 
-res = []
+let res = []
 
-x = 0
+let x = 0
 while x <= 100 {
     if x % 3 == 0 and x % 5 == 0 {
         table.push(res, "fizzbuzz") # push is a builtin function
@@ -16,5 +16,5 @@ while x <= 100 {
     x = x + 1
 }
 
-io.print("time: " + (clock() - start)) # benchmark time
+io.print("time: " + (os.clock() - start)) # benchmark time
 io.print(res) # print result
