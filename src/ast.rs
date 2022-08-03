@@ -27,6 +27,7 @@ pub enum Statement {
     FunDecl(Vec<String>, Box<Statement>),
     If(Box<Statement>, Box<Statement>, Option<Box<Statement>>),
     While(Box<Statement>, Box<Statement>),
+    For(Vec<String>, Box<Statement>, Box<Statement>),
     Expr(Expression),
     Return(Option<Box<Statement>>),
     // Break,

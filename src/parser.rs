@@ -93,6 +93,13 @@ impl<'a: 'b, 'b> Parser<'a, 'b> {
                 };
                 Ok(Statement::If(Box::new(condition), Box::new(body), elseb))
             },
+            For => {
+                let identifiers = self.identifiers().map_err(|e| vec![e])?;
+                match_next!(self, { In => () }).ok_or(vec![ParserError { cause: "Expected \"in\" here".to_string(), responsible: self.peek()}])?;
+                let iterator = self.expression_stmt()?;
+                let block = self.block(true)?;
+                Ok(Statement::For(identifiers, Box::new(iterator), Box::new(block)))
+            },
             While => {
                 let condition = self.expression_stmt()?;
                 let body = self.block(false)?;
@@ -110,7 +117,7 @@ impl<'a: 'b, 'b> Parser<'a, 'b> {
             },
             Fun => {
                 if self.match_adv(&Colon) {
-                    Ok(Statement::FunDecl(self.params().map_err(|e| vec![e])?, Box::new(self.block(false)?)))
+                    Ok(Statement::FunDecl(self.identifiers().map_err(|e| vec![e])?, Box::new(self.block(false)?)))
                 } else {
                     Ok(Statement::FunDecl(vec![], Box::new(self.block(false)?)))
                 }
@@ -214,7 +221,7 @@ impl<'a: 'b, 'b> Parser<'a, 'b> {
         res
     }
     
-    fn params(
+    fn identifiers(
         &mut self
     ) -> Result<Vec<std::string::String>, ParserError<'b>> {
         let mut params = vec![];

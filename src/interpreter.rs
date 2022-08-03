@@ -162,7 +162,25 @@ impl Statement {
                 } else if let Some(e) = else_block {
                     return e.execute(s);
                 }
-            }
+            },
+            Statement::For(ids, iterated, block) =>  {
+                let iter = iterated.execute(s.clone())?;
+
+                for value in iter {
+                    match value {
+                        Value::Nil => break,
+                        Value::List(list) => {
+                            for (id, v) in ids.iter().zip(list.borrow().iter()) {
+                                s.borrow_mut().set(id.to_owned(), v.clone())
+                            }
+                        },
+                        _ => {
+                            s.borrow_mut().set(ids[0].to_owned(), value);
+                        }
+                    }
+                    block.execute(s.clone())?;
+                }
+            },
             Statement::While(condition, block) => {
                 while condition.execute(s.clone())?.is_true() {
                     // collect in a list??

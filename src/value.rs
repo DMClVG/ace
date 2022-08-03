@@ -52,6 +52,36 @@ impl Object {
     }
 }
 
+#[macro_export]
+macro_rules! obj {
+    {$($a:ident: $b:expr),* $(,)?} => {
+        {
+            let mut object = self::Object::default();
+
+            $(
+                object.set(stringify!($a).to_owned(), ($b).into());
+            )*
+
+            object
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! list {
+    [$($b:expr),* $(,)?] => {
+        {
+            let mut list = Vec::<Value>::default();
+
+            $(
+                list.push(($b).into());
+            )*
+
+            list
+        }
+    };
+}
+
 #[derive(Debug, Clone)]
 pub enum Value {
     Number(f64),
@@ -306,6 +336,62 @@ impl Display for Value {
     }
 }
 
+pub struct IterValue {
+    i: usize,
+    v: Value,
+}
+
+impl IntoIterator for Value {
+    type Item = Value;
+
+    type IntoIter = IterValue;
+
+    fn into_iter(self) -> Self::IntoIter {
+        IterValue { i: 0, v: self }
+    }
+}
+
+impl Iterator for IterValue {
+    type Item = Value;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let next = match &self.v {
+            Value::List(list) => {
+                let next = list.borrow().get(self.i).cloned();
+                next
+            }
+            Value::Object(obj) => {
+                let next = obj
+                    .borrow()
+                    .fields
+                    .iter()
+                    .nth(self.i)
+                    .map(|(k, v)| Value::from(list![Value::from(&k[..]), v.to_owned()]));
+                next
+            },
+            Value::Fun(fun) => {
+                let next = fun.0(list![].into());
+                if next.is_nil() {
+                    None
+                } else {
+                    Some(next)
+                }
+            },
+            Value::String(s) => {
+                s.chars().nth(self.i).map(|c| { // stupidly slow & unoptimized
+                    let mut str: [u8; 4] = [0; 4];
+                    c.encode_utf8(&mut str);
+                    let str = std::str::from_utf8(&str).unwrap();
+                    Value::from(str)
+                })
+            },
+            _ => None,
+        };
+        self.i += 1;
+        next
+    }
+}
+
 impl Value {
     pub fn call(&self, args: Value) -> Value {
         use Value::*;
@@ -322,12 +408,12 @@ impl Value {
             (Object(obj), String(s)) => {
                 let obj = obj.borrow();
                 obj.get(s).clone()
-            },
+            }
             (Object(obj), Number(i)) => {
                 let obj = obj.borrow();
                 let len = obj.fields.len();
                 obj.fields.values().nth(i.to_index(len)).unwrap().clone()
-            },
+            }
             (List(a), _) if a.borrow().len() == 0 => Value::Nil,
             (List(a), Number(i)) => {
                 let a = (*a).borrow();
@@ -367,34 +453,4 @@ impl ToIndex for f64 {
     fn to_index(self, len: usize) -> usize {
         (self.round() as isize).rem_euclid(len as isize) as usize
     }
-}
-
-#[macro_export]
-macro_rules! obj {
-    {$($a:ident: $b:expr),* $(,)?} => {
-        {
-            let mut object = self::Object::default();
-
-            $(
-                object.set(stringify!($a).to_owned(), ($b).into());
-            )*
-
-            object
-        }
-    };
-}
-
-#[macro_export]
-macro_rules! list {
-    [$($b:expr),* $(,)?] => {
-        {
-            let mut list = Vec::<Value>::default();
-
-            $(
-                list.push(($b).into());
-            )*
-
-            list
-        }
-    };
 }

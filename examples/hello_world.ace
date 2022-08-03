@@ -2,8 +2,6 @@ message = "hello" + " " + "world" + "!!"
 
 io.print(message)
 
-i = 1
-while i < 5 { # print out every character individually
-    io.print(message[i])
-    i = i + 1 
-} 
+for c in message { # print out every character individually
+  io.print(c)
+}

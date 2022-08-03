@@ -53,7 +53,7 @@ It's far from complete, and to be frank I don't think it's a language I would be
 
 If there is any features I would still want to implement, it would be many of those:
 
-- [ ] For loops
+- [x] For loops
 - [ ] Destructuring: `` {a, b, c} = :{a: 5, b: 3, c:"yea"}``
 - [ ] Imports
 - [ ] Pattern Matching / Switch Statements

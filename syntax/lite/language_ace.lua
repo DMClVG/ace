@@ -20,6 +20,7 @@ syntax.add {
         ["fun"] = "keyword",
         ["while"] = "keyword",
         ["for"] = "keyword",
+        ["in"] = "keyword",
         ["else"] = "keyword",
         ["return"] = "keyword",
         ["and"] = "keyword",
