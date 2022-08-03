@@ -34,7 +34,7 @@ In the future, scripts should be able to import other scripts and make use of th
 
 ```
 {
-    7_plus_8 = import("ezmath.ace")() # preview syntax, not final product
+    7_plus_8 = import("ezmath.ace") # preview syntax, not final product
 
     print(7_plus_8) # >>> 15
 }
@@ -51,7 +51,7 @@ This is my first attempt at writing a full programming language, interpreter inc
 
 It's far from complete, and to be frank I don't think it's a language I would be thrilled to use (its got nil ew...), but you have to get your feet wet somehow.
 
-If there is any features I would still want to implement, it would be many of those:
+If there are any features I would still want to implement, it would be many of those:
 
 - [x] For loops
 - [ ] Destructuring: `` {a, b, c} = :{a: 5, b: 3, c:"yea"}``
@@ -81,7 +81,7 @@ But enough of that, lets end with the cools things I still want to experiment wi
 - [ ] Packaging
 
 ## Resources
-I followed the book over on [Crafting Interpreters](https://craftinginterpreters.com/) for some of the parsing process which taught me A LOT, and then diverged from there. I very much dislike reading technical stuff, and tbh I felt like my head was just about to fall of after the 4th chapter. Nevertheless, I recommend reading through all of it, if you can.
+I followed the book over on [Crafting Interpreters](https://craftinginterpreters.com/) for some of the parsing process which taught me A LOT, and then diverged from there. I very much dislike reading technical stuff, and tbh I felt like my head was just about to fall off after the 4th chapter. Nevertheless, I recommend reading through all of it, if you can.
 
 From that point forward I did whatever felt right. Not much can be said, aside from the fact that you should learn about your smart pointers. They're very useful.
 
