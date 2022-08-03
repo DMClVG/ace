@@ -73,7 +73,7 @@ impl<'a: 'b, 'b> Parser<'a, 'b> {
     }
 
     pub fn parse(mut self) -> Stmt<'b> {
-        self.statements(EOF).map(|stmts| Statement::Block(stmts, true))
+        self.statements(EOF).map(|stmts| Statement::Block(stmts, false))
         // self.block(true)
     }
 
