@@ -2,7 +2,7 @@ use std::{
     cell::RefCell,
     collections::HashMap,
     fmt::Display,
-    ops::{Add, Div, Mul, Neg, Not, Rem, Sub},
+    ops::{Add, AddAssign, Div, Mul, Neg, Not, Rem, Sub},
     rc::Rc,
 };
 
@@ -265,6 +265,15 @@ impl Neg for Value {
     }
 }
 
+impl AddAssign for Value {
+    fn add_assign(&mut self, rhs: Self) {
+        match (self, rhs) {
+            (Value::List(a), Value::List(b)) => a.borrow_mut().extend(b.borrow().iter().cloned()),
+            (a, b) => *a = a.clone() + b,
+        }
+    }
+}
+
 impl PartialOrd for Value {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         let ord_a = self.order();
@@ -405,7 +414,7 @@ impl Value {
             Self::List(list) => list.borrow().len() as f64,
             Self::Number(n) => *n,
             Self::Object(obj) => obj.borrow().fields.len() as f64,
-            _ => -f64::INFINITY
+            _ => -f64::INFINITY,
         }
     }
 

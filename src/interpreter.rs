@@ -160,23 +160,23 @@ impl Statement {
             },
             Statement::AddAssign(dest, stmt) => {
                 let add = stmt.execute(s.clone())?;
-                dest.evaluate_deref_assign(&mut s.borrow_mut(), add, Some(|a, b| a + b));
+                dest.evaluate_deref_assign(&mut s.borrow_mut(), add, Some(|a, b| *a += b));
             },
             Statement::SubAssign(dest, stmt) => {
                 let sub = stmt.execute(s.clone())?;
-                dest.evaluate_deref_assign(&mut s.borrow_mut(), sub, Some(|a, b| a - b));
+                dest.evaluate_deref_assign(&mut s.borrow_mut(), sub, Some(|a, b| *a = a.to_owned() - b));
             },
             Statement::MulAssign(dest, stmt) => {
                 let mul = stmt.execute(s.clone())?;
-                dest.evaluate_deref_assign(&mut s.borrow_mut(), mul, Some(|a, b| a * b));
+                dest.evaluate_deref_assign(&mut s.borrow_mut(), mul, Some(|a, b| *a = a.to_owned() * b));
             },
             Statement::DivAssign(dest, stmt) => {
                 let div = stmt.execute(s.clone())?;
-                dest.evaluate_deref_assign(&mut s.borrow_mut(), div, Some(|a, b| a / b));
+                dest.evaluate_deref_assign(&mut s.borrow_mut(), div, Some(|a, b| *a = a.to_owned() / b));
             },
             Statement::ModAssign(dest, stmt) => {
                 let modulo = stmt.execute(s.clone())?;
-                dest.evaluate_deref_assign(&mut s.borrow_mut(), modulo, Some(|a, b| a % b));
+                dest.evaluate_deref_assign(&mut s.borrow_mut(), modulo, Some(|a, b| *a = a.to_owned() % b));
             },
             Statement::If(condition, block, else_block) => {
                 let condition = condition.execute(s.clone())?;
@@ -314,13 +314,14 @@ impl Expression {
         }
     }
 
-    pub fn evaluate_deref_assign(&self, s: &mut Scope, n: Value, procedure: Option<fn(a: Value, b: Value) -> Value>) {
+    pub fn evaluate_deref_assign(&self, s: &mut Scope, n: Value, procedure: Option<fn(a: &mut Value, b: Value)>) {
         match self {
             Self::Var(var) => {
                 if let Some(procedure) = procedure {
-                    let a = s.get(var);
+                    let mut a = s.get(var);
                     let b = n;
-                    s.assign(var.as_str(), procedure(a, b))
+                    procedure(&mut a, b);
+                    s.assign(var.as_str(), a)
                 } else {
                     s.assign(var.as_str(), n);
                 }
@@ -333,9 +334,10 @@ impl Expression {
                         let mut p = left.evaluate(s);
                         let i = right.evaluate(s);
                         if let Some(procedure) = procedure {
-                            let a = p.index(&i);
+                            let mut a = p.index(&i);
                             let b = n;
-                            p.index_set(i, procedure(a, b))
+                            procedure(&mut a, b);
+                            p.index_set(i, a)
                         } else {
                             p.index_set(i, n)
                         }
