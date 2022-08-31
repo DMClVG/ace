@@ -36,16 +36,16 @@ impl Object {
         Self::default()
     }
 
-    pub fn set(&mut self, name: String, val: Value) {
+    pub fn set(&mut self, field: String, val: Value) {
         if !val.is_nil() {
-            self.fields.insert(name, val);
+            self.fields.insert(field, val);
         } else {
-            self.fields.remove(&name);
+            self.fields.remove(&field);
         }
     }
 
-    pub fn get(&self, var: &str) -> Value {
-        match self.fields.get(var) {
+    pub fn get(&self, field: &str) -> Value {
+        match self.fields.get(field) {
             Some(val) => val.clone(),
             None => Value::Nil,
         }

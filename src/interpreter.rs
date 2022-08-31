@@ -50,20 +50,15 @@ impl Scope {
         Value::Nil
     }
 
-    pub fn assign(&mut self, name: &str, val: Value) {
+    pub fn assign(&mut self, name: &str, val: Value) -> bool {
         if let Some(field) = self.inner.fields.get_mut(name) {
             *field = val;
-            return;
+            return true;
         }
-        let mut scope = self.enclosing.clone();
-        while let Some(s) = scope {
-            let mut s = s.borrow_mut();
-            if let Some(field) = s.inner.fields.get_mut(name) {
-                *field = val;
-                return;
-            } else {
-                scope = s.enclosing.clone();
-            }
+        if let Some(ref enclosing) = self.enclosing {
+            return enclosing.borrow_mut().assign(name, val);
+        } else {
+            return false;
         }
     }
 
@@ -144,7 +139,7 @@ impl Statement {
     pub fn execute(&self, s: Rc<RefCell<Scope>>) -> Result<Value, Value> {
         match self {
             Statement::Expr(expr) => {
-                return Ok(expr.evaluate(&s.borrow()));
+                return Ok(expr.evaluate(s));
             },
             Statement::Declare(id, stmt) => {
                 let to = stmt.execute(s.clone())?;
@@ -152,27 +147,27 @@ impl Statement {
             },
             Statement::Assign(dest, stmt) => {
                 let to = stmt.execute(s.clone())?;
-                dest.evaluate_deref_assign(&mut s.borrow_mut(), to, None);
+                dest.evaluate_deref_assign(s, to, None);
             },
             Statement::AddAssign(dest, stmt) => {
                 let add = stmt.execute(s.clone())?;
-                dest.evaluate_deref_assign(&mut s.borrow_mut(), add, Some(|a, b| *a += b));
+                dest.evaluate_deref_assign(s, add, Some(|a, b| *a += b));
             },
             Statement::SubAssign(dest, stmt) => {
                 let sub = stmt.execute(s.clone())?;
-                dest.evaluate_deref_assign(&mut s.borrow_mut(), sub, Some(|a, b| *a = a.to_owned() - b));
+                dest.evaluate_deref_assign(s, sub, Some(|a, b| *a = a.to_owned() - b));
             },
             Statement::MulAssign(dest, stmt) => {
                 let mul = stmt.execute(s.clone())?;
-                dest.evaluate_deref_assign(&mut s.borrow_mut(), mul, Some(|a, b| *a = a.to_owned() * b));
+                dest.evaluate_deref_assign(s, mul, Some(|a, b| *a = a.to_owned() * b));
             },
             Statement::DivAssign(dest, stmt) => {
                 let div = stmt.execute(s.clone())?;
-                dest.evaluate_deref_assign(&mut s.borrow_mut(), div, Some(|a, b| *a = a.to_owned() / b));
+                dest.evaluate_deref_assign(s, div, Some(|a, b| *a = a.to_owned() / b));
             },
             Statement::ModAssign(dest, stmt) => {
                 let modulo = stmt.execute(s.clone())?;
-                dest.evaluate_deref_assign(&mut s.borrow_mut(), modulo, Some(|a, b| *a = a.to_owned() % b));
+                dest.evaluate_deref_assign(s, modulo, Some(|a, b| *a = a.to_owned() % b));
             },
             Statement::If(condition, block, else_block) => {
                 let condition = condition.execute(s.clone())?;
@@ -264,10 +259,10 @@ impl Statement {
 }
 
 impl Expression {
-    pub fn evaluate(&self, s: &Scope) -> Value {
+    pub fn evaluate(&self, s: Rc<RefCell<Scope>>) -> Value {
         match self {
             Self::Literal(val) => val.clone(),
-            Self::Var(var) => Scope::get(s, var),
+            Self::Var(var) => Scope::get(&s.borrow(), var),
             Self::Unary(op, expr) => match op {
                 UnaryOperator::Inverse => !expr.evaluate(s),
                 UnaryOperator::Negate => -expr.evaluate(s),
@@ -275,7 +270,7 @@ impl Expression {
             Self::Binary(op, left, right) => {
                 use BinaryOperator::*;
                 use Value::Bool;
-                let a = left.evaluate(s);
+                let a = left.evaluate(s.clone());
                 let b = right.evaluate(s);
                 match op {
                     IsGreater => Bool(a > b),
@@ -297,12 +292,12 @@ impl Expression {
             }
             Self::List(exprs) => exprs
                 .iter()
-                .map(|expr| expr.evaluate(s))
+                .map(|expr| expr.evaluate(s.clone()))
                 .collect::<Vec<Value>>()
                 .into(),
             Self::Pairs(pairs) => pairs
                 .iter()
-                .map(|(k, v)| (k.to_owned(), v.evaluate(s)))
+                .map(|(k, v)| (k.to_owned(), v.evaluate(s.clone())))
                 .filter(|(_, v)| !v.is_nil())
                 .collect::<Object>()
                 .into(),
@@ -310,14 +305,15 @@ impl Expression {
         }
     }
 
-    pub fn evaluate_deref_assign(&self, s: &mut Scope, n: Value, procedure: Option<fn(a: &mut Value, b: Value)>) {
+    pub fn evaluate_deref_assign(&self, s: Rc<RefCell<Scope>>, n: Value, procedure: Option<fn(a: &mut Value, b: Value)>) {
         match self {
             Self::Var(var) => {
+                let mut s = s.borrow_mut();
                 if let Some(procedure) = procedure {
                     let mut a = s.get(var);
                     let b = n;
                     procedure(&mut a, b);
-                    s.assign(var.as_str(), a)
+                    s.assign(var.as_str(), a);
                 } else {
                     s.assign(var.as_str(), n);
                 }
@@ -327,7 +323,7 @@ impl Expression {
                 use BinaryOperator::*;
                 match op {
                     Index => {
-                        let mut p = left.evaluate(s);
+                        let mut p = left.evaluate(s.clone());
                         let i = right.evaluate(s);
                         if let Some(procedure) = procedure {
                             let mut a = p.index(&i);

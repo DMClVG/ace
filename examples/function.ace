@@ -5,7 +5,7 @@ let shout = fun: x {
 }
 
 let ask = fun: x, nQuestionMarks {
-    question_marks = if nQuestionMarks == nil {
+    let question_marks = if nQuestionMarks == nil {
         "?"
     } else {
         let res = ""
