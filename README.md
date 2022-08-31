@@ -14,7 +14,7 @@ The syntax is quite simple, having only one SINGLE reserved keyword: fun 😊 (u
 
 It's similar to JavaScript and Lua, or rather a combination of both
 
-In ACE, every script should be contained with a { }, as shown here:
+~~In ACE, every script should be contained with a { }, as shown here:~~
 ```
 {
     message_to_readers = "🐛"
