@@ -2,9 +2,9 @@ let array = ["a", "b", "c"]
 let obj = :{h:"a",b:"de",c:"ee"}
 
 for k, v in obj {
-  io.print(k + ": " + v)
+  print(k + ": " + v)
 }
 
 for e in array {
-  io.print(e)
+  print(e)
 }

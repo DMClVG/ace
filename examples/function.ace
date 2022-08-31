@@ -1,4 +1,4 @@
-let say = io.print
+let say = print
 
 let shout = fun: x {
     say(x + "!")

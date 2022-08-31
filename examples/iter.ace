@@ -12,9 +12,9 @@ let range = fun: min,max,step {
 }
 
 for i in range(4,20,2) {
-  io.print(i)
+  print(i)
 }
 
 for i in ["a","b","c"] {
-  io.print(i)
+  print(i)
 }

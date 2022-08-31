@@ -3,10 +3,10 @@ let cat = :{ # objects must start with a :{
     unhappy: false,
 }
 
-io.print(cat["happy"]) # objects can be indexed with strings
-io.print(cat.unhappy) # or with a field name
-io.print(cat)
+print(cat["happy"]) # objects can be indexed with strings
+print(cat.unhappy) # or with a field name
+print(cat)
 
 if cat == :{ happy: true, unhappy: false } {
-    io.print("yay happy 🥰")
+    print("yay happy 🥰")
 }

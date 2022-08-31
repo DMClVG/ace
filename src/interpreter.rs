@@ -119,9 +119,10 @@ pub fn new() -> Rc<RefCell<Scope>> {
     let random: FunDef = Box::new(|_| Number(rand::random()));
 
     let global: Scope = obj! {
+        print: print,
         io: obj! {
-            print: print,
-            input: input,
+            stdout: Value::Nil,
+            stdin: Value::Nil,
         },
         std: obj! {
             parse: parse,
@@ -130,13 +131,8 @@ pub fn new() -> Rc<RefCell<Scope>> {
         os: obj! {
             clock: clock,
         },
-        table: obj! {
+        array: obj! {
             push: push,
-        },
-        cat: obj! {
-            hey: 12.0,
-            yo: "baby",
-            house: list![0.0, "cat", obj! { lol: "bob" }],
         },
     }
     .into();

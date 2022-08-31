@@ -1,7 +1,7 @@
 let message = "hello" + " " + "world" + "!!"
 
-io.print(message)
+print(message)
 
 for c in message { # print out every character individually
-  io.print(c)
+  print(c)
 }

@@ -16,5 +16,5 @@ while x <= 100 {
     x = x + 1
 }
 
-io.print("time: " + (os.clock() - start)) # benchmark time
-io.print(res) # print result
+print("time: " + (os.clock() - start)) # benchmark time
+print(res) # print result

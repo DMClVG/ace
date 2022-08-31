@@ -1,4 +1,4 @@
-io.print("What is A?")
+print("What is A?")
 let a = io.input()
 let parsedA = std.parse(a)
 
@@ -6,7 +6,7 @@ if parsedA != nil {
     a = parsedA
 }
 
-io.print("What is B?")
+print("What is B?")
 
 let b = io.input()
 let parsedB = std.parse(b)
@@ -14,4 +14,4 @@ if parsedB != nil {
     b = parsedB
 }
 
-io.print("A + B is " + (a + b))
+print("A + B is " + (a + b))
